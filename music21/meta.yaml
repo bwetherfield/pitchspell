@@ -1,0 +1,88 @@
+{% set name = "music21" %}
+{% set version = "5.7.2" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: 360d977254c4c024da6cffbf7d4fb1ca36ba36ee516b1719a80e7141299bc8a6
+
+build:
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - pip
+    - python
+  run:
+    - python
+
+test:
+  imports:
+    - music21
+    - music21.abcFormat
+    - music21.alpha
+    - music21.alpha.analysis
+    - music21.analysis
+    - music21.audioSearch
+    - music21.braille
+    - music21.capella
+    - music21.chord
+    - music21.common
+    - music21.converter
+    - music21.corpus
+    - music21.ext
+    - music21.ext.chardet
+    - music21.ext.joblib
+    - music21.ext.joblib.externals
+    - music21.ext.joblib.externals.cloudpickle
+    - music21.ext.joblib.externals.loky
+    - music21.ext.joblib.externals.loky.backend
+    - music21.ext.joblib.test
+    - music21.ext.joblib.test.data
+    - music21.ext.jsonpickle
+    - music21.ext.jsonpickle.ext
+    - music21.ext.more_itertools
+    - music21.ext.xlrd
+    - music21.features
+    - music21.figuredBass
+    - music21.graph
+    - music21.humdrum
+    - music21.ipython21
+    - music21.languageExcerpts
+    - music21.lily
+    - music21.mei
+    - music21.metadata
+    - music21.midi
+    - music21.musedata
+    - music21.musedata.testPrimitive
+    - music21.musedata.testPrimitive.test01
+    - music21.musicxml
+    - music21.musicxml.lilypondTestSuite
+    - music21.noteworthy
+    - music21.omr
+    - music21.romanText
+    - music21.scale
+    - music21.scale.scala
+    - music21.scale.scala.scl
+    - music21.search
+    - music21.stream
+    - music21.test
+    - music21.tree
+    - music21.vexflow
+
+about:
+  home: "https://github.com/cuthbertLab/music21"
+  license: "BSD License or GNU Lesser General Public v3 or later (LGPLv3+)"
+  license_family: LGPL
+  license_file: 
+  summary: "A Toolkit for Computer-Aided Musical Analysis."
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - your-github-id-here
