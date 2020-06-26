@@ -5,6 +5,30 @@ from itertools import groupby
 from operator import add, itemgetter
 from functools import reduce
 
+def generate_row(musObject, part, pitchClass=np.nan):
+    """
+    Prepare rows for musical score `pandas.DataFrame`.
+
+    Parameters
+    ----------
+    musObject: music21.Music21Object
+    part: music21.part
+    pitchClass: float
+        Default of `numpy.nan` for unpitched objects and a pitch class for rows with `Type` value `music21.pitch.Pitch`
+
+    Returns
+    -------
+    dict
+    """
+    d = {}
+    d.update({'id': musObject.id,
+              'Part Name': part.partName,
+              'Offset': musObject.offset,
+              'Duration': musObject.duration.quarterLength,
+              'Type': type(musObject),
+              'Pitch Class': pitchClass})
+    return d
+
 def generate_df(score):
     """
     Prepare `pandas.DataFrame` from musical score.
@@ -29,30 +53,6 @@ def generate_df(score):
             else:
                 rows_list.append(generate_row(elt, part))
     return pd.DataFrame(rows_list)
-
-def generate_row(musObject, part, pitchClass=np.nan):
-    """
-    Prepare rows for musical score `pandas.DataFrame`.
-
-    Parameters
-    ----------
-    musObject: music21.Music21Object
-    part: music21.part
-    pitchClass: float
-        Default of `numpy.nan` for unpitched objects and a pitch class for rows with `Type` value `music21.pitch.Pitch`
-
-    Returns
-    -------
-    dict
-    """
-    d = {}
-    d.update({'id': musObject.id,
-              'Part Name': part.partName,
-              'Offset': musObject.offset,
-              'Duration': musObject.duration.quarterLength,
-              'Type': type(musObject),
-              'Pitch Class': pitchClass})
-    return d
 
 def combine_rests(df):
     """
