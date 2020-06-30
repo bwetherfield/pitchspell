@@ -108,21 +108,59 @@ def combine_rests(df):
 
 
 def extract_chains(df):
-    aux_df = pd.DataFrame(columns=['chainbreaker', 'chains', 'partnum'])
+    """
+    Return DataFrame with columns for chainbreakers ('chainbreaker'),
+    part numbers ('partnum') and chains ('chain') added.
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+
+    Returns
+    -------
+    pandas.DataFrame
+
+    """
+    aux_df = pd.DataFrame(columns=['chainbreaker', 'chain', 'partnum'])
     aux_df['chainbreaker'] = (df.Type.isin([bar.Barline, bar.Repeat])) | (
             (df.Type == note.Rest) &
             (df.Duration >= 3.0))
-    aux_df['chains'] = aux_df.chainbreaker.astype('int64').cumsum() - 1
+    aux_df['chain'] = aux_df.chainbreaker.astype('int64').cumsum() - 1
     aux_df['partnum'] = pd.factorize(df['Part Name'])[0]
-    aux_df.chains += aux_df.partnum
+    aux_df.chain += aux_df.partnum
     return pd.concat([df, aux_df], axis=1)
 
 
 def events_only(df):
+    """
+    Return DataFrame containing only the pitched elements (chords and notes).
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+
+    Returns
+    -------
+    pandas.DataFrame
+
+    """
     return df[~df['Pitch Class'].isna()]
 
 
 def extract_events(df):
+    """
+    Return DataFrame with a column that labels the enumerated pitched events
+    (notes and chords).
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+
+    Returns
+    -------
+    pandas.DataFrame
+
+    """
     return df.assign(eventnum=pd.factorize(df['id'])[0])
 
 
