@@ -6,6 +6,7 @@ from operator import add, itemgetter
 from functools import reduce
 import matplotlib.pyplot as plt
 
+
 def generate_row(mus_object, part, pitch_class=np.nan):
     """
     Prepare rows for musical score `pandas.DataFrame`.
@@ -48,8 +49,10 @@ def generate_df(score):
     parts = score.parts
     rows_list = []
     for part in parts:
-        for index, elt in enumerate(part.flat.stripTies().getElementsByClass(
-                [note.Note, note.Rest, chord.Chord, bar.Barline])):
+        for index, elt in enumerate(part.flat
+                .stripTies(retainContainers=True)
+                .getElementsByClass(
+            [note.Note, note.Rest, chord.Chord, bar.Barline])):
             if hasattr(elt, 'pitches'):
                 pitches = elt.pitches
                 for pitch in pitches:
@@ -102,6 +105,25 @@ def combine_rests(df):
     agg_func = dict.fromkeys(df, 'first')
     agg_func.update({'Duration': 'sum'})
     return df.groupby(get_initial_rest, axis=0).agg(agg_func)
+
+
+def extract_chains(df):
+    aux_df = pd.DataFrame(columns=['chainbreaker', 'chains', 'partnum'])
+    aux_df['chainbreaker'] = (df.Type.isin([bar.Barline, bar.Repeat])) | (
+            (df.Type == note.Rest) &
+            (df.Duration >= 3.0))
+    aux_df['chains'] = aux_df.chainbreaker.astype('int64').cumsum() - 1
+    aux_df['partnum'] = pd.factorize(df['Part Name'])[0]
+    aux_df.chains += aux_df.partnum
+    return pd.concat([df, aux_df], axis=1)
+
+
+def events_only(df):
+    return df[~df['Pitch Class'].isna()]
+
+
+def extract_events(df):
+    return df.assign(eventnum=pd.factorize(df['id'])[0])
 
 
 if __name__ == '__main__':
