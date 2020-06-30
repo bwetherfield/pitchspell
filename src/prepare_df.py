@@ -49,10 +49,15 @@ def generate_df(score):
     parts = score.parts
     rows_list = []
     for part in parts:
-        for index, elt in enumerate(part.flat
+        for index, elt in enumerate(part
+                .flat
                 .stripTies(retainContainers=True)
-                .getElementsByClass(
-            [note.Note, note.Rest, chord.Chord, bar.Barline])):
+                .getElementsByClass([
+            note.Note,
+            note.Rest,
+            chord.Chord,
+            bar.Barline
+        ])):
             if hasattr(elt, 'pitches'):
                 pitches = elt.pitches
                 for pitch in pitches:
