@@ -169,6 +169,10 @@ def extract_events(df):
     return df.assign(eventnum=pd.factorize(df['id'])[0])
 
 
+def time_factor(df, epsilon=0.01):
+    df.assign(timefactor=epsilon * pd.factorize(df.offset) + 1)
+
+
 if __name__ == '__main__':
     clara_search = corpus.search('clara')
     clara_score = clara_search[0].parse()
