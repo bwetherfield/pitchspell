@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def pullback(f, shape, arr):
+def f_inverse(f, shape, arr):
     """
     Returns a numpy array of the specified dimensions, defined by mapping
     each index to an index of `arr` using `f`.
