@@ -53,7 +53,3 @@ def pad(abs_idx, rel_idx, length, arr):
     mapping[abs_idx] = rel_idx
     return pullback(mapping, arr_plus)
 
-
-def add_node(arr, in_edges = 0, out_edges = 0):
-    output = np.insert(arr, arr.shape[0], out_edges, axis=0)
-    return np.insert(output, arr.shape[1], np.append(in_edges, 0), axis=1)

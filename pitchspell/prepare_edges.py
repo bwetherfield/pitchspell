@@ -21,3 +21,8 @@ def concurrencies(starts, ends, size=None):
             starts[indices[1]] < ends[indices[0]]
         ))
     return overlaps.astype('int') - np.eye(size, dtype='int')
+
+
+def add_node(arr, in_edges = 0, out_edges = 0):
+    output = np.insert(arr, arr.shape[0], out_edges, axis=0)
+    return np.insert(output, arr.shape[1], np.append(in_edges, 0), axis=1)
