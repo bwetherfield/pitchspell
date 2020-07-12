@@ -19,7 +19,7 @@ def pullback(f, shape, arr):
     """
     idx = np.indices(shape)
     mapped_idx = f(idx)
-    return arr(tuple(mapped_idx))
+    return arr[tuple(mapped_idx)]
 
 
 def pullback(mapping, arr=None):
