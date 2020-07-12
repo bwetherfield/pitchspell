@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def hop_adjacency(hops, size):
+def hop_adjacencies(hops, size):
     indices = np.indices((size, size))
     abs_differences = np.abs(indices[0] - indices[1])
     return np.equal(abs_differences, hops).astype('int')
