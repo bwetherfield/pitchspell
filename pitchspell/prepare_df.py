@@ -4,7 +4,6 @@ import numpy as np
 from itertools import groupby
 from operator import add, itemgetter
 from functools import reduce
-import matplotlib.pyplot as plt
 
 
 def generate_row(mus_object, part, pitch_class=np.nan):
