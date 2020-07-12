@@ -43,3 +43,12 @@ def pullback(mapping, arr=None):
         arr = np.eye(n, dtype='int')
     N = len(mapping)
     return arr[tuple(mapping[np.indices((N, N), dtype='int')])]
+
+
+def pad(abs_idx, rel_idx, length, arr):
+    arr_plus = np.insert(np.insert(arr,
+                                   arr.shape[1], 0, axis=1),
+                         arr.shape[0], 0, axis=0)
+    mapping = np.full(length, -1, dtype='int')
+    mapping[abs_idx] = rel_idx
+    return pullback(mapping, arr_plus)
