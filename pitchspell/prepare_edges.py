@@ -1,5 +1,4 @@
 import numpy as np
-from .pullback import pullback
 
 
 def hop_adjacency(hops, size):
@@ -12,7 +11,7 @@ def concurrencies(starts, ends, size=None):
     if size is None:
         size = len(starts)
     indices = np.indices((size, size))
-    syncs = np.logical_or(
+    overlaps = np.logical_or(
         np.logical_and(
             starts[indices[0]] >= starts[indices[1]],
             starts[indices[0]] < ends[indices[1]]
@@ -21,4 +20,4 @@ def concurrencies(starts, ends, size=None):
             starts[indices[1]] >= starts[indices[0]],
             starts[indices[1]] < ends[indices[0]]
         ))
-    return syncs.astype('int') - np.eye(size, dtype='int')
+    return overlaps.astype('int') - np.eye(size, dtype='int')
