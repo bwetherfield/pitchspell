@@ -6,16 +6,17 @@ from operator import add, itemgetter
 from functools import reduce
 
 
-def generate_row(mus_object, part, pitch_class=np.nan):
+def generate_row(mus_object, part, pitch=None, pitch_class=None):
     """
     Prepare rows for musical score `pandas.DataFrame`.
 
     Parameters
     ----------
     mus_object: music21.Music21Object
-    part: music21.part
+    part: music21.part.Part
+    pitch: music21.pitch.Pitch
     pitch_class: float
-        Default of `numpy.nan` for unpitched objects and a pitch class for rows
+        Default of None for unpitched objects and a pitch class for rows
         with `Type` value `music21.pitch.Pitch`
 
     Returns
@@ -28,6 +29,7 @@ def generate_row(mus_object, part, pitch_class=np.nan):
               'Offset': mus_object.offset,
               'Duration': mus_object.duration.quarterLength,
               'Type': type(mus_object),
+              'Pitch': pitch,
               'Pitch Class': pitch_class})
     return d
 
@@ -60,7 +62,8 @@ def generate_df(score):
             if hasattr(elt, 'pitches'):
                 pitches = elt.pitches
                 for pitch in pitches:
-                    rows_list.append(generate_row(elt, part, pitch.pitchClass))
+                    rows_list.append(generate_row(elt, part, pitch,
+                                                  pitch.pitchClass))
             else:
                 rows_list.append(generate_row(elt, part))
     return pd.DataFrame(rows_list)
