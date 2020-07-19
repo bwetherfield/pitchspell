@@ -4,6 +4,7 @@ import numpy as np
 from itertools import groupby
 from operator import add, itemgetter
 from functools import reduce
+from pitchspell import coder
 
 
 def generate_row(mus_object, part, pitch=None, pitch_class=None):
@@ -175,8 +176,24 @@ def time_factor(df, epsilon=0.01):
     df.assign(timefactor=epsilon * pd.factorize(df.offset) + 1)
 
 
-if __name__ == '__main__':
-    clara_search = corpus.search('clara')
+def get_codings(pitches):
+    """
+    Return a column for each bit of the encoding (2).
+
+    Parameters
+    ----------
+    pitches: pandas.Series
+
+    Returns
+    -------
+    pandas.DataFrame
+
+    """
+    return pd.DataFrame(pitches.apply(coder.encode).tolist(),
+                        index=pitches.index)
+
+    if __name__ == '__main__':
+        clara_search = corpus.search('clara')
     clara_score = clara_search[0].parse()
     clara_df = generate_df(clara_score)
     clara_condensed_df = combine_rests(clara_df)
