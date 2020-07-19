@@ -69,3 +69,29 @@ def pad(abs_idx, rel_idx, new_size, arr):
     mapping[abs_idx] = rel_idx
     return pullback(mapping, arr_plus)
 
+
+def square_index(arr):
+    """
+    Take an NxN matrix to an N^2xN^2 matrix such that the new matrix
+    multiplied by an N^2 column of variables produces the same constraints
+    as the original matrix multiplied by an NxN matrix of variables. Also
+    produces NxN - N zero constraints. Row i is mapped to position (i*N+i,i*N).
+
+    Parameters
+    ----------
+    arr: numpy.ndarray
+
+    Returns
+    -------
+    numpy.ndarray
+
+    """
+    N = arr.shape[0]
+    N_sq = N*N
+    squared_arr = np.zeros((N_sq, N_sq), dtype='int')
+    for i in range(N):
+        mask = np.zeros((N, N), dtype='int')
+        mask[i] = np.ones(N)
+        idx = np.indices((N,))[0]
+        squared_arr += pad(idx + N * i, idx, N_sq, arr * mask)
+    return squared_arr
