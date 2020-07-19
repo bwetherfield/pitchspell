@@ -1,5 +1,6 @@
 def encode(pitch):
     """
+    Return pair encoding according to the pitch spelling.
 
     Parameters
     ----------
@@ -19,6 +20,7 @@ def encode(pitch):
 
 def decode(pair, pitch):
     """
+    Return pitch spelled according to pair of binary ints.
 
     Parameters
     ----------
