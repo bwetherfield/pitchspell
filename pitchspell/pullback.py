@@ -46,6 +46,22 @@ def pullback(mapping, arr=None):
 
 
 def pad(abs_idx, rel_idx, new_size, arr):
+    """
+    Map relative indices `rel_idx` to new positions in a larger matrix of shape
+    `(new_size, new_size)` with the remaining entries 0 (padded).
+
+    Parameters
+    ----------
+    abs_idx: numpy.ndarray
+    rel_idx: numpy.ndarray
+    new_size: int
+    arr: numpy.ndarray
+
+    Returns
+    -------
+    numpy.ndarray
+
+    """
     arr_plus = np.insert(np.insert(arr,
                                    arr.shape[1], 0, axis=1),
                          arr.shape[0], 0, axis=0)
