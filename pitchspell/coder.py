@@ -1,4 +1,15 @@
 def encode(pitch):
+    """
+
+    Parameters
+    ----------
+    pitch: music21.pitch.Pitch
+
+    Returns
+    -------
+    (int, int)
+
+    """
     if pitch.getLowerEnharmonic().accidental.alter > 2.0:
         return (1, 1)
     elif pitch.getHigherEnharmonic().accidental.alter < -2.0:
@@ -7,6 +18,18 @@ def encode(pitch):
         return (0, 1)
 
 def decode(pair, pitch):
+    """
+
+    Parameters
+    ----------
+    pair: (int, int)
+    pitch: music21.pitch.Pitch
+
+    Returns
+    -------
+    music21.pitch.Pitch
+
+    """
     test = sum(pair) - sum(encode(pitch))
     if test == 0:
         return pitch
