@@ -173,7 +173,17 @@ def extract_events(df):
 
 
 def time_factor(df, epsilon=0.01):
-    df.assign(timefactor=epsilon * pd.factorize(df.offset) + 1)
+    """
+    Add a column to `df` in place providing a scale factor linear in the
+    left-right position of each event in the score (with gradient `epsilon`).
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+    epsilon: float
+
+    """
+    df.assign(timefactor=epsilon * pd.factorize(df.offset)[0] + 1)
 
 
 def get_codings(pitches):
