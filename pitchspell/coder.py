@@ -18,6 +18,7 @@ def encode(pitch):
     else:
         return (0, 1)
 
+
 def decode(pair, pitch):
     """
     Return pitch spelled according to pair of binary ints.
