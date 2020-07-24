@@ -7,7 +7,7 @@ from functools import reduce
 from pitchspell import coder
 
 
-def generate_row(mus_object, part, pitch=None, pitch_class=None):
+def generate_row(mus_object, part, pitch_class=None, pitch=None):
     """
     Prepare rows for musical score `pandas.DataFrame`.
 
@@ -30,8 +30,9 @@ def generate_row(mus_object, part, pitch=None, pitch_class=None):
               'Offset': mus_object.offset,
               'Duration': mus_object.duration.quarterLength,
               'Type': type(mus_object),
-              'Pitch': pitch,
-              'Pitch Class': pitch_class})
+              'Pitch Class': pitch_class,
+              'Pitch': pitch
+              })
     return d
 
 
@@ -63,8 +64,8 @@ def generate_df(score):
             if hasattr(elt, 'pitches'):
                 pitches = elt.pitches
                 for pitch in pitches:
-                    rows_list.append(generate_row(elt, part, pitch,
-                                                  pitch.pitchClass))
+                    rows_list.append(
+                        generate_row(elt, part, pitch.pitchClass, pitch))
             else:
                 rows_list.append(generate_row(elt, part))
     return pd.DataFrame(rows_list)
@@ -202,8 +203,9 @@ def get_codings(pitches):
     return pd.DataFrame(pitches.apply(coder.encode).tolist(),
                         index=pitches.index)
 
-    if __name__ == '__main__':
-        clara_search = corpus.search('clara')
+
+if __name__ == '__main__':
+    clara_search = corpus.search('clara')
     clara_score = clara_search[0].parse()
     clara_df = generate_df(clara_score)
     clara_condensed_df = combine_rests(clara_df)
