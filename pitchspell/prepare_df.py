@@ -208,6 +208,27 @@ def get_codings(pitches):
                         index=pitches.index)
 
 
+def df_from_score(score):
+    df = generate_df(score)
+    condensed_df = combine_rests(df)
+    columns_added = assign_time_factor(
+        extract_events(
+            events_only(
+                extract_chains(
+                    condensed_df))))
+    return columns_added
+
+
+def X_y_from_score(score):
+    df = df_from_score(score)
+    cols = ['eventnum', 'chain', 'partnum', 'Offset', 'Duration',
+            'Pitch Class']
+    return (
+        df[cols].repeat(2).to_numpy(),
+        get_codings(df).to_numpy().reshape(-1, 1)
+    )
+
+
 if __name__ == '__main__':
     clara_search = corpus.search('clara')
     clara_score = clara_search[0].parse()
