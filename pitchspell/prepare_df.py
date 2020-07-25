@@ -153,7 +153,9 @@ def events_only(df):
     pandas.DataFrame
 
     """
-    return df[~df['Pitch Class'].isna()]
+    events = df[~df['Pitch Class'].isna()]
+    events.loc[:, 'Pitch Class'] = events['Pitch Class'].astype('int')
+    return events
 
 
 def extract_events(df):
@@ -221,24 +223,16 @@ def df_from_score(score):
 
 def X_y_from_score(score):
     df = df_from_score(score)
-    cols = ['eventnum', 'chain', 'partnum', 'Offset', 'Duration',
-            'Pitch Class']
+    int_cols = ['eventnum', 'chain', 'partnum', 'Pitch Class']
+    float_cols = ['Offset', 'Duration', 'timefactor']
     return (
-        df[cols].repeat(2).to_numpy(),
-        get_codings(df).to_numpy().reshape(-1, 1)
+        df[int_cols],
+        df[float_cols],
+        get_codings(df.Pitch).to_numpy().flatten()
     )
 
 
 if __name__ == '__main__':
     clara_search = corpus.search('clara')
     clara_score = clara_search[0].parse()
-    clara_df = generate_df(clara_score)
-    clara_condensed_df = combine_rests(clara_df)
-    clara_with_chains = events_only(extract_chains(clara_condensed_df))
-    assign_time_factor(clara_with_chains)
-    clara_with_chains.to_csv('test_dataframe.csv')
-    codings = get_codings(clara_with_chains.Pitch)
-    codings.to_csv('test_codings.csv')
-
-    # clara_df.to_csv('test_dataframe_before_condensing.csv')
-    # clara_condensed_df.to_csv('test_dataframe_after_condensing.csv')
+    print(X_y_from_score(clara_score))
