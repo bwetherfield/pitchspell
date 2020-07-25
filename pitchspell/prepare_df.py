@@ -173,7 +173,7 @@ def extract_events(df):
     return df.assign(eventnum=pd.factorize(df['id'])[0])
 
 
-def time_factor(df, epsilon=0.01):
+def assign_time_factor(df, epsilon=0.01):
     """
     Add a column to `df` in place providing a scale factor linear in the
     left-right position of each event in the score (with gradient `epsilon`).
@@ -183,8 +183,12 @@ def time_factor(df, epsilon=0.01):
     df: pandas.DataFrame
     epsilon: float
 
+    Returns
+    -------
+    pandas.DataFrame
+
     """
-    df.assign(timefactor=epsilon * pd.factorize(df.offset)[0] + 1)
+    return df.assign(timefactor=epsilon * pd.factorize(df.Offset)[0] + 1)
 
 
 def get_codings(pitches):
@@ -209,5 +213,11 @@ if __name__ == '__main__':
     clara_score = clara_search[0].parse()
     clara_df = generate_df(clara_score)
     clara_condensed_df = combine_rests(clara_df)
+    clara_with_chains = events_only(extract_chains(clara_condensed_df))
+    assign_time_factor(clara_with_chains)
+    clara_with_chains.to_csv('test_dataframe.csv')
+    codings = get_codings(clara_with_chains.Pitch)
+    codings.to_csv('test_codings.csv')
+
     # clara_df.to_csv('test_dataframe_before_condensing.csv')
     # clara_condensed_df.to_csv('test_dataframe_after_condensing.csv')
