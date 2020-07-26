@@ -70,11 +70,11 @@ def pad(abs_idx, rel_idx, new_size, arr):
     return pullback(mapping, arr_plus)
 
 
-def square_index(arr):
+def stretch(arr):
     """
-    Take an NxN matrix to an NxN^2 matrix such that the new matrix
-    multiplied by an N^2 column of variables produces the same constraints
-    as the original matrix multiplied by an NxN matrix of variables.
+    Take an NxM matrix to an NxNM matrix such that the new matrix
+    multiplied by an NM column of variables produces the same constraints
+    as the original matrix multiplied by an MxN matrix of variables.
 
     Parameters
     ----------
@@ -85,9 +85,9 @@ def square_index(arr):
     numpy.ndarray
 
     """
-    N = arr.shape[0]
-    N_sq = N * N
-    squared_arr = np.zeros((N, N_sq), dtype='int')
-    for i in range(N):
-        squared_arr[i, i * np.indices((N,))] = arr[i]
-    return squared_arr
+    rows = arr.shape[0]
+    columns = arr.shape[1]
+    stretched_arr = np.zeros((rows, rows * columns), dtype='int')
+    for i in range(rows):
+        stretched_arr[i, i * np.indices((columns,))] = arr[i]
+    return stretched_arr
