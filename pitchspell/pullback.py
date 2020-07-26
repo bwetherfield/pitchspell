@@ -45,23 +45,25 @@ def pullback(mapping, arr=None):
     return arr[tuple(mapping[np.indices((N, N), dtype='int')])]
 
 
-def pad(abs_idx, rel_idx, new_shape, arr):
+def pad(new_shape, arr, abs_idx, rel_idx=None):
     """
     Map relative indices `rel_idx` to new positions in a larger matrix of shape
     `(new_size, new_size)` with the remaining entries 0 (padded).
 
     Parameters
     ----------
-    abs_idx: numpy.ndarray
-    rel_idx: numpy.ndarray
     new_shape: int or tuple of ints
     arr: numpy.ndarray
+    abs_idx: numpy.ndarray
+    rel_idx: numpy.ndarray or None
 
     Returns
     -------
     numpy.ndarray
 
     """
+    if rel_idx is None:
+        rel_idx = np.indices(arr.shape)
     new_arr = np.zeros(new_shape, dtype=arr.dtype)
     new_arr[abs_idx] = arr[rel_idx]
     return new_arr
