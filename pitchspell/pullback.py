@@ -89,5 +89,5 @@ def square_index(arr):
     N_sq = N * N
     squared_arr = np.zeros((N, N_sq), dtype='int')
     for i in range(N):
-        squared_arr[i, np.indices((N,))] = 1
+        squared_arr[i, i * np.indices((N,))] = arr[i]
     return squared_arr
