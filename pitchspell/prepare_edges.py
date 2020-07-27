@@ -51,7 +51,7 @@ def concurrencies(starts, ends, size=None):
     return overlaps.astype('int') - np.eye(size, dtype='int')
 
 
-def add_node(arr, pos=None, in_edges=0, out_edges=0):
+def add_node(arr, in_edges=[], out_edges=[]):
     """
     Add node to an adjacency matrix given its position (assumed at the end
     of the list of nodes), its incident edges and its outgoing edges.
@@ -59,7 +59,6 @@ def add_node(arr, pos=None, in_edges=0, out_edges=0):
     Parameters
     ----------
     arr: numpy.ndarray
-    pos: int
     in_edges: int or numpy.ndarray
     out_edges: int or numpy.ndarray
 
@@ -68,7 +67,10 @@ def add_node(arr, pos=None, in_edges=0, out_edges=0):
     numpy.ndarray
 
     """
-    if pos is None:
-        pos = arr.shape[0]
-    output = np.insert(arr, pos, out_edges, axis=0)
-    return np.insert(output, pos, np.append(in_edges, 0), axis=1)
+    output = np.zeros(np.array(arr.shape) + 1, dtype=arr.dtype)
+    output[:-1,:-1] = arr
+    output[-1] = np.append(out_edges, 0)
+    # output[-1] = [0]
+    output[:,-1] = np.append(in_edges, 0)
+    # output[:,-1] = [0]
+    return output
