@@ -8,8 +8,8 @@ from pitchspell.pullback import pullback, f_inverse, stretch, pad
 
 
 class ApproximateInverter(BaseEstimator):
-    int_cols = ['eventnum', 'chain', 'partnum', 'Pitch Class']
-    float_cols = ['Offset', 'Duration', 'timefactor']
+    # int_cols = ['eventnum', 'chain', 'partnum', 'Pitch Class']
+    # float_cols = ['Offset', 'Duration', 'timefactor']
 
     source_edge_scheme = np.array((13, 26, 3, 1, 13, 13, 26, 3, 0, 3, 1, 13))
     sink_edge_scheme = np.array((13, 1, 3, 26, 13, 13, 1, 3, 0, 3, 26, 13))
@@ -312,7 +312,7 @@ class ApproximateInverter(BaseEstimator):
         )
         capacity_conditions_rhs = np.zeros((pow(N + 2, 2)), dtype=int)
 
-        #----------------------------------------
+        # ----------------------------------------
         # SET UP LINEAR PROGRAM
         if self.pre_calculated_weights:
             c = np.zeros((2 * pow(N + 2, 2) + 1))
@@ -334,10 +334,10 @@ class ApproximateInverter(BaseEstimator):
         A_ub = capacity_conditions_spaced
         b_ub = capacity_conditions_rhs
         if self.pre_calculated_weights:
-            bounds = (0,100)
+            bounds = (0, 100)
         else:
             ub = np.full((2 * pow(N + 2, 2) + 1 + pow(26, 2)), 100)
-            ub[-pow(26, 2)] = edge_weights
+            ub[-pow(26, 2):] = edge_weights
             pc_scheme = self.internal_scheme
             pc_scheme_idx = np.indices(12) * 2
             pc_source_edges = np.zeros(24)
@@ -346,8 +346,8 @@ class ApproximateInverter(BaseEstimator):
             pc_sink_edges[pc_scheme_idx + 1] = self.sink_edge_scheme
             pc_scheme = add_node(pc_scheme, out_edges=pc_source_edges)
             pc_scheme = add_node(pc_scheme, in_edges=pc_sink_edges)
-            ub[-pow(26,2)] = 26 * np.clip(pc_scheme, 0, 1)
+            ub[-pow(26, 2):] = 26 * np.clip(pc_scheme, 0, 1)
             bounds = (0, ub)
 
-        output_ = linprog(c=c,A_ub=A_ub,b_ub=b_ub,A_eq=A_eq,b_eq=b_eq,
+        output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
                           bounds=bounds)
