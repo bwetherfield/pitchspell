@@ -355,3 +355,18 @@ class ApproximateInverter(BaseEstimator):
 
         output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
                           bounds=bounds)
+        # Accuracy score given by size of duality gap of linear program
+        self._score = output_.x[2 * pow(N + 2, 2)]
+        if not self.pre_calculated_weights:
+            weights_unfiltered = output_.x[-pow(26, 2):]
+            self.source_edge_scheme = weights_unfiltered[
+                (np.indices((12,), dtype=int) * 2) * 26 + 24
+                ]
+            self.sink_edge_scheme = weights_unfiltered[
+                (np.indices((12,), dtype=int) * 2 + 1) + 25 * 26
+                ]
+            self.internal_scheme = weights_unfiltered[
+                np.indices((pow(26,2),)).reshape((26,26))[
+                    tuple(np.indices(24, 24))
+                ].flatten()
+            ]
