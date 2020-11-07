@@ -8,6 +8,10 @@ from pitchspell.pullback import pullback, f_inverse, stretch, pad
 
 
 class ApproximateInverter(BaseEstimator):
+    """
+        Learns edge weight scale factors from the pitches and spellings of a
+        score translated to a data frame. Provides a
+    """
     # int_cols = ['eventnum', 'chain', 'partnum', 'Pitch Class']
     # float_cols = ['Offset', 'Duration', 'timefactor']
 
