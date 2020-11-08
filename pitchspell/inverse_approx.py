@@ -147,6 +147,7 @@ class ApproximateInverter(BaseEstimator):
                 N // 2, dtype='int')
         )
 
+        # Connect concurrent notes in different parts
         between_part_adj = concurrencies(
             X[:, 4], X[:, 5]
         ) * not_part_adj
