@@ -373,3 +373,6 @@ class ApproximateInverter(BaseEstimator):
 
     def score(self, X, y=None):
         return self._score
+
+    def predict(self, X):
+        return X[1]
