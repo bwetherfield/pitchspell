@@ -370,3 +370,6 @@ class ApproximateInverter(BaseEstimator):
                     tuple(np.indices(24, 24))
                 ].flatten()
             ]
+
+    def score(self, X, y=None):
+        return self._score
