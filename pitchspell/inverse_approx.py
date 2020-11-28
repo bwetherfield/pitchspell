@@ -289,7 +289,7 @@ class ApproximateInverter(BaseEstimator):
             pc_scheme = add_node(pc_scheme, out_edges=pc_source_edges)
             pc_scheme = add_node(pc_scheme, in_edges=pc_sink_edges)
             ub[-pow(26, 2):] = 26 * np.clip(pc_scheme, 0, 1)
-            bounds = (0, ub)
+            bounds = list(zip(np.zeros_like(ub), ub))
 
         output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
                           bounds=bounds)
@@ -454,7 +454,7 @@ class ApproximateInverter(BaseEstimator):
         big_M = self.get_big_M_edges(N)
 
         # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t
-        # node_indicators = np.zeros(N + 2, dtype=int)
+        # node_indicators = np.zeros(N, dtype=int)
         # edge_indicators = np.zeros((N + 2, N + 2), dtype=int)
         # sq_idx = np.indices((N,N))
 
@@ -464,4 +464,5 @@ class ApproximateInverter(BaseEstimator):
         # - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
 
         # x_i <= 1 bounds
-        # x_i, y_ij >= 0 bounds
+        # x_i, y_ij >= 0 bounds (default)
+        bounds = [(0, 1)] * N + [(0, None)] * pow(N + 2, 2)
