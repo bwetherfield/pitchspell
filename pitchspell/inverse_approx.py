@@ -448,4 +448,17 @@ class ApproximateInverter(BaseEstimator):
         return self._score
 
     def predict(self, X):
-        adj, weighted_adj = self.extract_adjacencies(X)
+        N = X.shape[0]
+        adj, weighted_adj = self.extract_adjacencies(N, X)
+        edge_weights = self.get_weight_scalers(N, X)
+        big_M = self.get_big_M_edges(N)
+
+        # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t
+        # node_indicators = np.zeros(N + 2, dtype=int)
+        # edge_indicators = np.zeros((N + 2, N + 2), dtype=int)
+        # sq_idx = np.indices((N,N))
+
+        # x_i - y_(s, i) <= 0 for all i: (s,i) is an edge
+        adj[N + 1]
+
+        # - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
