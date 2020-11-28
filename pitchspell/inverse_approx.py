@@ -4,7 +4,7 @@ from scipy.optimize import linprog
 
 from pitchspell.minimum_cut import generate_complete_cut
 from pitchspell.prepare_edges import hop_adjacencies, concurrencies, add_node
-from pitchspell.pullback import pullback, f_inverse, stretch, pad
+from pitchspell.pullback import pullback, f_inverse, pad
 
 
 class ApproximateInverter(BaseEstimator):
@@ -134,10 +134,17 @@ class ApproximateInverter(BaseEstimator):
         # ----------------------------------------
         # EQUALITY CONSTRAINTS
         # sum_(i=1)^n f_(i,k) - sum_(j=1)^n f_(k,j) = 0 for all k != s,t
-        flow_conditions = adj - adj.T
-        # Remove flow conditions from source and sink edges
-        flow_conditions[-2:] = 0
-        flow_conditions[:, -2:] = 0
+        internal_adj = adj
+        internal_adj[-2:] = 0
+        internal_adj[, -2:] = 0
+        square_idx = np.indices((N, N))
+        flow_conditions = np.zeros((N, pow(N + 2, 2)))
+        flow_conditions[
+            square_idx[0], N * square_idx[0] + square_idx[1]
+        ] = internal_adj[tuple(square_idx)]
+        flow_conditions[
+            square_idx[0], N * square_idx[0], N * square_idx[1] + square_idx[0]
+        ] = -internal_adj[tuple(square_idx)]
         # RHS
         flow_conditions_rhs = np.zeros((N), dtype=int)
 
@@ -149,6 +156,7 @@ class ApproximateInverter(BaseEstimator):
         # RHS
         duality_constraint_rhs = [0]
 
+        # Capacity variable definitions
         if self.pre_calculated_weights:
             # c_i,j = t(i,j) * w_(p(i), p(j))
             capacities_def_with_weights_given = np.eye(pow(N + 2, 2),
@@ -199,7 +207,7 @@ class ApproximateInverter(BaseEstimator):
         )
 
         duality_constraint_spaced = pad(
-            (2 * pow(N + 2, 2) + 1 + pow(26, 2),),
+            (1, 2 * pow(N + 2, 2) + 1 + pow(26, 2)),
             duality_constraint,
             np.concatenate([
                 np.indices((N + 2,)) + N * (N + 2),
@@ -296,7 +304,7 @@ class ApproximateInverter(BaseEstimator):
                 (np.indices((12,), dtype=int) * 2 + 1) + 25 * 26
                 ]
             self.internal_scheme = weights_unfiltered[
-                np.indices((pow(26,2),)).reshape((26,26))[
+                np.indices((pow(26, 2),)).reshape((26, 26))[
                     tuple(np.indices(24, 24))
                 ].flatten()
             ]
