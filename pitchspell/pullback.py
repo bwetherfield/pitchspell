@@ -75,6 +75,10 @@ def stretch(arr):
     multiplied by an NM column of variables produces the same constraints
     as the original matrix multiplied by an MxN matrix of variables.
 
+    [ 1 2 ]   ->   [ 1 2 0 0 0 0 ]
+    | 3 4 |        | 0 0 3 4 0 0 |
+    [ 5 6 ]        [ 0 0 0 0 5 6 ]
+
     Parameters
     ----------
     arr: numpy.ndarray
