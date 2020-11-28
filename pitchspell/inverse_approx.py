@@ -462,3 +462,6 @@ class ApproximateInverter(BaseEstimator):
         adj[N + 1]
 
         # - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
+
+        # x_i <= 1 bounds
+        # x_i, y_ij >= 0 bounds
