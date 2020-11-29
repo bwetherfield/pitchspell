@@ -151,7 +151,7 @@ class ApproximateInverter(BaseEstimator):
         # sum_(i=1)^n f_s,i - sum_(e in cut) c_e = delta
         cut = self.generate_cut(adj, y)
         duality_constraint = np.concatenate([
-            np.ones(N, dtype='int'), ~cut.flatten(), [1]
+            np.ones(N, dtype='int'), -cut.flatten(), [1]
         ])
         # RHS
         duality_constraint_rhs = [0]
@@ -181,7 +181,7 @@ class ApproximateInverter(BaseEstimator):
                 pc_edge_1d_idx
             ] = weighted_adj.flatten()
             capacity_def_with_weights_variable = np.concatenate([
-                np.eye(pow(N + 2, 2)), ~pitch_based_capacity
+                np.eye(pow(N + 2, 2)), -pitch_based_capacity
             ], axis=1)
             # RHS
             capacities_def_rhs = np.zeros((pow(N + 2, 2)), dtype=int)
@@ -192,7 +192,7 @@ class ApproximateInverter(BaseEstimator):
         capacity_conditions = np.concatenate(
             [
                 np.eye(pow(N + 2, 2), dtype='int'),
-                ~np.eye(pow(N + 2, 2), dtype='int')
+                -np.eye(pow(N + 2, 2), dtype='int')
             ],
             axis=1
         )
@@ -387,7 +387,7 @@ class ApproximateInverter(BaseEstimator):
         n_events = X[:, 0].max() + 1
         part_adj = pullback(X[:, 2])
         chain_adj = pullback(X[:, 1]) * part_adj
-        not_part_adj = ~part_adj
+        not_part_adj = -part_adj
         within_chain_adjs = list(map(
             lambda arr: pullback(X[:, 0]) * chain_adj,
             [hop_adjacencies(i, n_events) for i in range(self.distance_cutoff)]
@@ -395,7 +395,7 @@ class ApproximateInverter(BaseEstimator):
 
         # Remove adjacency within the same note (between notes in the same
         # event is fine)
-        within_chain_adjs[0] *= ~f_inverse(
+        within_chain_adjs[0] *= -f_inverse(
             lambda x: x // 2, (N, N), np.eye(
                 N // 2, dtype='int')
         )
