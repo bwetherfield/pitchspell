@@ -232,7 +232,7 @@ class ApproximateInverter(BaseEstimator):
             abs_idx[1] += n_edges
             capacities_def_spaced = pad(
                 (n_edges,
-                 2 * n_edges + 1 + pow(24, 2)),
+                 2 * n_edges + 1 + pow(26, 2)),
                 capacities_def_with_weights_given,
                 abs_idx
             )
@@ -341,7 +341,8 @@ class ApproximateInverter(BaseEstimator):
         numpy.ndarray
 
         """
-        idx = np.indices((n_internal_nodes // 2,), dtype='int') * 2
+        half_internal_nodes = n_internal_nodes // 2
+        idx = np.indices((half_internal_nodes,), dtype='int') * 2
         source_edges = self.source_edge_scheme[X[:, 3]]
         source_edges[idx + 1] = 0
         sink_edges = self.sink_edge_scheme[X[:, 3]]
@@ -375,12 +376,13 @@ class ApproximateInverter(BaseEstimator):
 
         """
 
-        internal_adj = np.tile([[0, 0], [1, 0]], [n_internal_nodes // 2,
-                                                  n_internal_nodes // 2]) * \
+        half_internal_nodes = n_internal_nodes // 2
+        internal_adj = np.tile([[0, 0], [1, 0]], [half_internal_nodes,
+                                                  half_internal_nodes]) * \
                        np.repeat(
                            np.repeat(
-                               np.eye(n_internal_nodes // 2,
-                                      n_internal_nodes // 2,
+                               np.eye(half_internal_nodes,
+                                      half_internal_nodes,
                                       dtype='int'),
                                [2],
                                axis=1),
@@ -407,6 +409,7 @@ class ApproximateInverter(BaseEstimator):
         numpy.ndarray, numpy.ndarray
 
         """
+        half_internal_nodes = n_internal_nodes // 2
         n_events = X[:, 0].max() + 1
         part_adj = pullback(X[:, 2])
         chain_adj = pullback(X[:, 1]) * part_adj
@@ -420,7 +423,7 @@ class ApproximateInverter(BaseEstimator):
         # event is fine)
         within_chain_adjs[0] *= -f_inverse(
             lambda x: x // 2, (n_internal_nodes, n_internal_nodes), np.eye(
-                n_internal_nodes // 2, dtype='int')
+                half_internal_nodes, dtype='int')
         )
 
         # Connect concurrent notes in different parts
@@ -438,15 +441,15 @@ class ApproximateInverter(BaseEstimator):
         # Generate adjacency matrix
         source_adj = np.zeros((n_internal_nodes,), dtype='int')
         sink_adj = np.zeros((n_internal_nodes,), dtype='int')
-        idx = np.indices((n_internal_nodes // 2,), dtype='int') * 2
+        idx = np.indices((half_internal_nodes,), dtype='int') * 2
         source_adj[idx] = 1
         sink_adj[idx + 1] = 1
-        internal_adj = np.tile([[0, 0], [1, 0]], [n_internal_nodes // 2,
-                                                  n_internal_nodes // 2]) * \
+        internal_adj = np.tile([[0, 0], [1, 0]], [half_internal_nodes,
+                                                  half_internal_nodes]) * \
                        np.repeat(
                            np.repeat(
-                               np.eye(n_internal_nodes // 2,
-                                      n_internal_nodes // 2,
+                               np.eye(half_internal_nodes,
+                                      half_internal_nodes,
                                       dtype='int'),
                                [2],
                                axis=1),
@@ -490,8 +493,10 @@ class ApproximateInverter(BaseEstimator):
         implicit square of variables s, and t
         """
         n_internal_nodes = X.shape[0]
+        n_internal_edges = pow(n_internal_nodes, 2)
         n_nodes = n_internal_nodes + 2
         n_edges = pow(n_nodes, 2)
+        half_internal_nodes = n_internal_nodes // 2
         adj, weighted_adj = self.extract_adjacencies(n_internal_nodes, X)
         edge_weights = self.get_weight_scalers(n_internal_nodes, X)
         big_M = self.get_big_M_edges(n_internal_nodes)
@@ -503,13 +508,13 @@ class ApproximateInverter(BaseEstimator):
         internal_adj = adj[-2:, -2:]
         sq_idx = np.indices((n_internal_nodes, n_internal_nodes))
         internal_pairings = np.zeros(
-            (pow(n_internal_nodes, 2), n_internal_nodes), dtype=int)
+            (n_internal_edges, n_internal_nodes), dtype=int)
         internal_pairings[
-            np.arange(pow(n_internal_nodes, 2)), sq_idx[0].flatten()] -= 1
+            np.arange(n_internal_edges), sq_idx[0].flatten()] -= 1
         internal_pairings[
-            np.arange(pow(n_internal_nodes, 2)), sq_idx[1].flatten()] += 1
+            np.arange(n_internal_edges), sq_idx[1].flatten()] += 1
         edge_indicators = np.zeros(
-            (pow(n_internal_nodes, 2), n_edges), dtype=int)
+            (n_internal_edges, n_edges), dtype=int)
         edge_indicators[
             n_internal_nodes * sq_idx[0] + sq_idx[1],
             (n_nodes) * sq_idx[0] + sq_idx[1]
@@ -518,54 +523,53 @@ class ApproximateInverter(BaseEstimator):
         internal_constraints = np.concatenate([internal_pairings,
                                                edge_indicators], axis=1)
         internal_constraints *= internal_adj.reshape(
-            (pow(n_internal_nodes, 2), 1))
-        internal_constraints_rhs = np.zeros(pow(n_internal_nodes, 2), dtype=int)
+            (n_internal_edges, 1))
+        internal_constraints_rhs = np.zeros(n_internal_edges, dtype=int)
 
         # x_i - y_(s, i) <=0 for all i: (s,i) is an edge
         source_adj = adj[-2]
-        source_pairings = np.zeros((n_internal_nodes // 2, n_internal_nodes),
+        source_pairings = np.zeros((half_internal_nodes, n_internal_nodes),
                                    dtype=int)
-        source_pairings[np.arange(n_internal_nodes // 2), np.arange(
-            n_internal_nodes // 2) * 2] = 1
+        source_pairings[np.arange(half_internal_nodes), np.arange(
+            half_internal_nodes) * 2] = 1
         source_edge_indicators = np.zeros(
-            (n_internal_nodes // 2, n_edges), dtype=int)
+            (half_internal_nodes, n_edges), dtype=int)
         source_edge_indicators[
-            np.arange(n_internal_nodes // 2),
+            np.arange(half_internal_nodes),
             (n_nodes) * n_internal_nodes + np.arange(
-                n_internal_nodes // 2) * 2
-        ] = source_adj[np.arange(n_internal_nodes // 2) * 2]
+                half_internal_nodes) * 2
+        ] = source_adj[np.arange(half_internal_nodes) * 2]
         source_constraints = np.concatenate([source_pairings,
                                              source_edge_indicators], axis=1)
         source_constraints *= source_adj[
-            np.arange(n_internal_nodes // 2) * 2
-            ].reshape((n_internal_nodes // 2, 1))
-        source_constraints_rhs = np.zeros(n_internal_nodes // 2, dtype=int)
+            np.arange(half_internal_nodes) * 2
+            ].reshape((half_internal_nodes, 1))
+        source_constraints_rhs = np.zeros(half_internal_nodes, dtype=int)
 
         # - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
         sink_adj = adj[:, -1]
-        sink_pairings = np.zeros((n_internal_nodes // 2, n_internal_nodes),
+        sink_pairings = np.zeros((half_internal_nodes, n_internal_nodes),
                                  dtype=int)
-        sink_pairings[np.arange(n_internal_nodes // 2), np.arange(
-            n_internal_nodes // 2) * 2 + 1] = -1
+        sink_pairings[np.arange(half_internal_nodes), np.arange(
+            half_internal_nodes) * 2 + 1] = -1
         sink_edge_indicators = np.zeros(
-            (n_internal_nodes // 2, n_edges), dtype=int)
+            (half_internal_nodes, n_edges), dtype=int)
         sink_edge_indicators[
-            np.arange(n_internal_nodes // 2),
+            np.arange(half_internal_nodes),
             (n_nodes) * (
-                    np.arange(n_internal_nodes // 2) * 2 + 1) + (
+                    np.arange(half_internal_nodes) * 2 + 1) + (
                     n_internal_nodes + 1)
-        ] = sink_adj[np.arange(n_internal_nodes // 2) * 2 + 1]
+        ] = sink_adj[np.arange(half_internal_nodes) * 2 + 1]
         sink_constraints = np.concatenate([sink_pairings,
                                            sink_edge_indicators], axis=1)
         sink_constraints *= sink_adj[
-            np.arange(n_internal_nodes // 2) * 2 + 1
-            ].reshape((n_internal_nodes // 2, 1))
-        sink_constraints_rhs = np.full((n_internal_nodes // 2,), -1)
+            np.arange(half_internal_nodes) * 2 + 1
+            ].reshape((half_internal_nodes, 1))
+        sink_constraints_rhs = np.full((half_internal_nodes,), -1)
 
         # x_i <= 1 bounds
         # x_i, y_ij >= 0 bounds (default)
-        bounds = [(0, 1)] * n_internal_nodes + [(0, n_internal_nodes)] * pow(
-            n_nodes, 2)
+        bounds = [(0, 1)] * n_internal_nodes + [(0, n_internal_nodes)] * n_edges
 
         capacities = (weighted_adj * edge_weights + big_M).flatten()
         c = np.concatenate([np.zeros(n_internal_nodes, dtype=int), capacities])
