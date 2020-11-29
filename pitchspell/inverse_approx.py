@@ -11,6 +11,7 @@ class ApproximateInverter(BaseEstimator):
     """
         Learns edge weight scale factors from the pitches and spellings of a
         score translated to a data frame. Provides a
+        `sklearn.base.BaseEstimator` interface for use with parameter searches.
     """
     # int_cols = ['eventnum', 'chain', 'partnum', 'Pitch Class']
     # float_cols = ['Offset', 'Duration', 'timefactor']
@@ -295,6 +296,8 @@ class ApproximateInverter(BaseEstimator):
                           bounds=bounds)
         # Accuracy score given by size of duality gap of linear program
         self._score = output_.x[2 * pow(N + 2, 2)]
+
+        # Record edge weight schemes
         if not self.pre_calculated_weights:
             weights_unfiltered = output_.x[-pow(26, 2):]
             self.source_edge_scheme = weights_unfiltered[
