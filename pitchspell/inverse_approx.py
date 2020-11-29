@@ -6,6 +6,11 @@ from pitchspell.minimum_cut import generate_complete_cut
 from pitchspell.prepare_edges import hop_adjacencies, concurrencies, add_node
 from pitchspell.pullback import pullback, f_inverse, pad
 
+n_pitch_classes = 12
+n_pitch_class_internal_nodes = 24  # n_pitch_classes * 2
+n_pitch_class_nodes = 26  # n_pitch_class_internal_nodes + 2
+n_pitch_class_edges = 676  # pow(pitch_class_nodes, 2)
+
 
 class ApproximateInverter(BaseEstimator):
     """
@@ -176,13 +181,16 @@ class ApproximateInverter(BaseEstimator):
             # c_i,j - t(i,j) * w_(p(i), p(j)) = 0
             pitch_class_indexing = X[:, 3] * 2 + np.indices((n_internal_nodes,),
                                                             dtype='int') % 2
-            pc_idx_with_src_sink = np.append(pitch_class_indexing, [24, 25])
+            pc_idx_with_src_sink = np.append(pitch_class_indexing,
+                                             [n_pitch_class_internal_nodes,
+                                              n_pitch_class_internal_nodes + 1])
             pc_edge_2d_idx = pc_idx_with_src_sink[
                 np.indices((n_nodes, n_nodes))]
             pc_edge_1d_idx = (
-                    pc_edge_2d_idx[0] * 26 + pc_edge_2d_idx[1]).flatten()
+                    pc_edge_2d_idx[0] * n_pitch_class_nodes + pc_edge_2d_idx[
+                1]).flatten()
             pitch_based_capacity = np.zeros(n_edges,
-                                            pow(26, 2))
+                                            n_pitch_class_edges)
             pitch_based_capacity[
                 np.indices((n_edges,)),
                 pc_edge_1d_idx
@@ -210,13 +218,13 @@ class ApproximateInverter(BaseEstimator):
         # add space for delta variable and pitch class weight matrix
         flow_conditions_spaced = pad(
             (
-                n_internal_nodes, 2 * n_edges + 1 + pow(26, 2)),
+                n_internal_nodes, 2 * n_edges + 1 + n_pitch_class_edges),
             flow_conditions,
             np.indices(flow_conditions.shape)
         )
 
         duality_constraint_spaced = pad(
-            (1, 2 * n_edges + 1 + pow(26, 2)),
+            (1, 2 * n_edges + 1 + n_pitch_class_edges),
             duality_constraint,
             np.concatenate([
                 np.indices((n_nodes,)) + n_internal_nodes * (
@@ -232,7 +240,7 @@ class ApproximateInverter(BaseEstimator):
             abs_idx[1] += n_edges
             capacities_def_spaced = pad(
                 (n_edges,
-                 2 * n_edges + 1 + pow(26, 2)),
+                 2 * n_edges + 1 + n_pitch_class_edges),
                 capacities_def_with_weights_given,
                 abs_idx
             )
@@ -251,7 +259,7 @@ class ApproximateInverter(BaseEstimator):
             capacities_def_spaced = pad(
                 (
                     capacity_def_with_weights_variable.shape[0],
-                    2 * n_edges + 1 + pow(26, 2)
+                    2 * n_edges + 1 + n_pitch_class_edges
                 ),
                 capacity_def_with_weights_variable,
                 capacity_definition_spaced_idx
@@ -262,7 +270,7 @@ class ApproximateInverter(BaseEstimator):
         # add space for delta variable and pitch class weight matrix
         capacity_conditions_spaced = pad(
             (n_nodes,
-             2 * n_edges + 1 + pow(26, 2)),
+             2 * n_edges + 1 + n_pitch_class_edges),
             capacity_conditions,
             np.indices(capacity_conditions.shape)
         )
@@ -275,9 +283,9 @@ class ApproximateInverter(BaseEstimator):
             c = np.zeros((2 * n_edges + 1))
             c[2 * n_edges] = self.accuracy
         else:
-            c = np.zeros((2 * n_edges + 1 + pow(26, 2)))
+            c = np.zeros((2 * n_edges + 1 + n_pitch_class_edges))
             c[2 * n_edges] = self.accuracy
-            c[-pow(26, 2):] = -1
+            c[-n_pitch_class_edges:] = -1
         A_eq = np.concatenate([
             flow_conditions_spaced,
             duality_constraint_spaced,
@@ -293,18 +301,19 @@ class ApproximateInverter(BaseEstimator):
         if self.pre_calculated_weights:
             bounds = (0, 100)
         else:
-            ub = np.full((2 * n_edges + 1 + pow(26, 2)),
+            ub = np.full((2 * n_edges + 1 + n_pitch_class_edges),
                          100)
-            ub[-pow(26, 2):] = edge_weights
+            ub[-n_pitch_class_edges:] = edge_weights
             pc_scheme = self.internal_scheme
-            pc_scheme_idx = np.indices(12) * 2
-            pc_source_edges = np.zeros(24)
+            pc_scheme_idx = np.indices(n_pitch_classes) * 2
+            pc_source_edges = np.zeros(n_pitch_class_internal_nodes)
             pc_source_edges[pc_scheme_idx] = self.source_edge_scheme
-            pc_sink_edges = np.zeros(25)
+            pc_sink_edges = np.zeros(n_pitch_class_internal_nodes + 1)
             pc_sink_edges[pc_scheme_idx + 1] = self.sink_edge_scheme
             pc_scheme = add_node(pc_scheme, out_edges=pc_source_edges)
             pc_scheme = add_node(pc_scheme, in_edges=pc_sink_edges)
-            ub[-pow(26, 2):] = 26 * np.clip(pc_scheme, 0, 1)
+            ub[-n_pitch_class_edges:] = n_pitch_class_nodes * np.clip(pc_scheme,
+                                                                      0, 1)
             bounds = list(zip(np.zeros_like(ub), ub))
 
         output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
@@ -314,16 +323,21 @@ class ApproximateInverter(BaseEstimator):
 
         # Record edge weight schemes
         if not self.pre_calculated_weights:
-            weights_unfiltered = output_.x[-pow(26, 2):]
+            weights_unfiltered = output_.x[-n_pitch_class_edges:]
             self.source_edge_scheme = weights_unfiltered[
-                (np.indices((12,), dtype=int) * 2) * 26 + 24
+                (np.indices((n_pitch_classes,),
+                            dtype=int) * 2) * n_pitch_class_nodes +
+                n_pitch_class_internal_nodes
                 ]
             self.sink_edge_scheme = weights_unfiltered[
-                (np.indices((12,), dtype=int) * 2 + 1) + 25 * 26
+                (np.indices((n_pitch_classes,), dtype=int) * 2 + 1) + (
+                        n_pitch_class_internal_nodes + 1) * n_pitch_class_nodes
                 ]
             self.internal_scheme = weights_unfiltered[
-                np.indices((pow(26, 2),)).reshape((26, 26))[
-                    tuple(np.indices(24, 24))
+                np.indices((n_pitch_class_edges,)).reshape(
+                    (n_pitch_class_nodes, n_pitch_class_nodes))[
+                    tuple(np.indices(n_pitch_class_internal_nodes,
+                                     n_pitch_class_internal_nodes))
                 ].flatten()
             ]
 
