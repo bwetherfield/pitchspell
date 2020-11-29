@@ -140,10 +140,10 @@ class ApproximateInverter(BaseEstimator):
         square_idx = np.indices((N, N))
         flow_conditions = np.zeros((N, pow(N + 2, 2)))
         flow_conditions[
-            square_idx[0], N * square_idx[0] + square_idx[1]
+            square_idx[0], (N + 2) * square_idx[0] + square_idx[1]
         ] = internal_adj[tuple(square_idx)]
         flow_conditions[
-            square_idx[0], N * square_idx[0], N * square_idx[1] + square_idx[0]
+            square_idx[0], (N + 2) * square_idx[1] + square_idx[0]
         ] = -internal_adj[tuple(square_idx)]
         # RHS
         flow_conditions_rhs = np.zeros((N), dtype=int)
