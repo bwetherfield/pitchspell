@@ -135,6 +135,7 @@ class ApproximateInverter(BaseEstimator):
 
         """
         n_internal_nodes = X.shape[0]
+        half_internal_nodes = n_internal_nodes // 2
         n_nodes = n_internal_nodes + 2
         n_edges = pow(n_nodes, 2)
         adj, weighted_adj = self.extract_adjacencies(n_internal_nodes, X)
@@ -171,7 +172,8 @@ class ApproximateInverter(BaseEstimator):
             capacities_def_with_weights_given = np.eye(
                 n_edges,
                 dtype='int')
-            edge_weights = self.get_weight_scalers(n_internal_nodes, X)
+            edge_weights = self.get_weight_scalers(
+                half_internal_nodes, n_internal_nodes, X)
             big_M = self.get_big_M_edges(n_internal_nodes)
             # RHS
             capacities_def_rhs = (
@@ -341,7 +343,7 @@ class ApproximateInverter(BaseEstimator):
                 ].flatten()
             ]
 
-    def get_weight_scalers(self, n_internal_nodes, X):
+    def get_weight_scalers(self, half_internal_nodes, n_internal_nodes, X):
         """
         Get weight scalers based on the pitches of the notes in the dataset X.
 
@@ -355,7 +357,6 @@ class ApproximateInverter(BaseEstimator):
         numpy.ndarray
 
         """
-        half_internal_nodes = n_internal_nodes // 2
         idx = np.indices((half_internal_nodes,), dtype='int') * 2
         source_edges = self.source_edge_scheme[X[:, 3]]
         source_edges[idx + 1] = 0
@@ -512,7 +513,8 @@ class ApproximateInverter(BaseEstimator):
         n_edges = pow(n_nodes, 2)
         half_internal_nodes = n_internal_nodes // 2
         adj, weighted_adj = self.extract_adjacencies(n_internal_nodes, X)
-        edge_weights = self.get_weight_scalers(n_internal_nodes, X)
+        edge_weights = self.get_weight_scalers(
+            half_internal_nodes, n_internal_nodes, X)
         big_M = self.get_big_M_edges(n_internal_nodes)
         big_M_adj = big_M
         big_M_adj[big_M[np.isinf(big_M)]] = 1
