@@ -152,7 +152,7 @@ class ApproximateInverter(BaseEstimator):
         # sum_(i=1)^n f_s,i - sum_(e in cut) c_e = delta
         cut = self.generate_cut(adj, y)
         duality_constraint = np.concatenate([
-            np.ones(N, dtype='int'), -cut.flatten(), [1]
+            np.ones(N, dtype='int'), -cut.flatten(), [-1]
         ])
         # RHS
         duality_constraint_rhs = [0]
