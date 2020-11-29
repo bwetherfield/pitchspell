@@ -448,21 +448,91 @@ class ApproximateInverter(BaseEstimator):
         return self._score
 
     def predict(self, X):
+        """
+        Forward solver for `self`.
+
+        Parameters
+        ----------
+        X: numpy.ndarray
+
+        Returns
+        -------
+        numpy.ndarray
+
+        Variable order: x_i (N), y_ij ((N+2)^2) with final two columns of
+        implicit square of variables s, and t
+        """
         N = X.shape[0]
         adj, weighted_adj = self.extract_adjacencies(N, X)
         edge_weights = self.get_weight_scalers(N, X)
         big_M = self.get_big_M_edges(N)
+        big_M_adj = big_M
+        big_M_adj[big_M[np.isinf(big_M)]] = 1
+        adj += big_M_adj
 
         # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t
-        # node_indicators = np.zeros(N, dtype=int)
-        # edge_indicators = np.zeros((N + 2, N + 2), dtype=int)
-        # sq_idx = np.indices((N,N))
+        internal_adj = adj[-2:, -2:]
+        sq_idx = np.indices((N, N))
+        internal_pairings = np.zeros((pow(N, 2), N), dtype=int)
+        internal_pairings[np.arange(pow(N, 2)), sq_idx[0].flatten()] -= 1
+        internal_pairings[np.arange(pow(N, 2)), sq_idx[1].flatten()] += 1
+        edge_indicators = np.zeros((pow(N, 2), pow(N + 2, 2)), dtype=int)
+        edge_indicators[
+            N * sq_idx[0] + sq_idx[1],
+            (N + 2) * sq_idx[0] + sq_idx[1]
+        ] = internal_adj[tuple(sq_idx)]
 
-        # x_i - y_(s, i) <= 0 for all i: (s,i) is an edge
-        adj[N + 1]
+        internal_constraints = np.concatenate([internal_pairings,
+                                               edge_indicators], axis=1)
+        internal_constraints *= internal_adj.reshape((pow(N, 2), 1))
+        internal_constraints_rhs = np.zeros(pow(N, 2), dtype=int)
+
+        # x_i - y_(s, i) <=0 for all i: (s,i) is an edge
+        source_adj = adj[-2]
+        source_pairings = np.zeros((N // 2, N), dtype=int)
+        source_pairings[np.arange(N // 2), np.arange(N // 2) * 2] = 1
+        source_edge_indicators = np.zeros((N // 2, pow(N + 2, 2)), dtype=int)
+        source_edge_indicators[
+            np.arange(N // 2),
+            (N + 2) * N + np.arange(N // 2) * 2
+        ] = source_adj[np.arange(N // 2) * 2]
+        source_constraints = np.concatenate([source_pairings,
+                                             source_edge_indicators], axis=1)
+        source_constraints *= source_adj[
+            np.arange(N // 2) * 2
+            ].reshape((N // 2, 1))
+        source_constraints_rhs = np.zeros(N // 2, dtype=int)
 
         # - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
+        sink_adj = adj[:, -1]
+        sink_pairings = np.zeros((N // 2, N), dtype=int)
+        sink_pairings[np.arange(N // 2), np.arange(N // 2) * 2 + 1] = -1
+        sink_edge_indicators = np.zeros((N // 2, pow(N + 2, 2)), dtype=int)
+        sink_edge_indicators[
+            np.arange(N // 2),
+            (N + 2) * (np.arange(N // 2) * 2 + 1) + (N + 1)
+        ] = sink_adj[np.arange(N // 2) * 2 + 1]
+        sink_constraints = np.concatenate([sink_pairings,
+                                           sink_edge_indicators], axis=1)
+        sink_constraints *= sink_adj[
+            np.arange(N // 2) * 2 + 1
+            ].reshape((N // 2, 1))
+        sink_constraints_rhs = np.full((N // 2,), -1)
 
         # x_i <= 1 bounds
         # x_i, y_ij >= 0 bounds (default)
         bounds = [(0, 1)] * N + [(0, None)] * pow(N + 2, 2)
+
+        capacities = (weighted_adj * edge_weights + big_M).flatten()
+        c = np.concatenate([np.zeros(N, dtype=int), capacities])
+        A_ub = np.concatenate([
+            internal_constraints,
+            source_constraints,
+            sink_constraints
+        ], axis=0)
+        b_ub = np.append([
+            internal_constraints_rhs,
+            source_constraints_rhs,
+            sink_constraints_rhs
+        ])
+        return linprog(c=c, A_ub=A_ub, b_ub=b_ub, bounds=bounds).x
