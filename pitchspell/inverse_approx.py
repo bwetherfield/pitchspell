@@ -129,8 +129,8 @@ class ApproximateInverter(BaseEstimator):
         y: numpy.ndarray (1D)
 
         """
-        N = X.shape[0]
-        adj, weighted_adj = self.extract_adjacencies(N, X)
+        n_internal_nodes = X.shape[0]
+        adj, weighted_adj = self.extract_adjacencies(n_internal_nodes, X)
 
         # ----------------------------------------
         # EQUALITY CONSTRAINTS
@@ -138,21 +138,22 @@ class ApproximateInverter(BaseEstimator):
         internal_adj = adj
         internal_adj[-2:] = 0
         internal_adj[, -2:] = 0
-        square_idx = np.indices((N, N))
-        flow_conditions = np.zeros((N, pow(N + 2, 2)))
+        square_idx = np.indices((n_internal_nodes, n_internal_nodes))
+        flow_conditions = np.zeros(
+            (n_internal_nodes, pow(n_internal_nodes + 2, 2)))
         flow_conditions[
-            square_idx[0], (N + 2) * square_idx[0] + square_idx[1]
+            square_idx[0], (n_internal_nodes + 2) * square_idx[0] + square_idx[1]
         ] = internal_adj[tuple(square_idx)]
         flow_conditions[
-            square_idx[0], (N + 2) * square_idx[1] + square_idx[0]
+            square_idx[0], (n_internal_nodes + 2) * square_idx[1] + square_idx[0]
         ] = -internal_adj[tuple(square_idx)]
         # RHS
-        flow_conditions_rhs = np.zeros((N), dtype=int)
+        flow_conditions_rhs = np.zeros((n_internal_nodes), dtype=int)
 
         # sum_(i=1)^n f_s,i - sum_(e in cut) c_e = delta
         cut = self.generate_cut(adj, y)
         duality_constraint = np.concatenate([
-            np.ones(N, dtype='int'), -cut.flatten(), [-1]
+            np.ones(n_internal_nodes, dtype='int'), -cut.flatten(), [-1]
         ])
         # RHS
         duality_constraint_rhs = [0]
@@ -160,40 +161,44 @@ class ApproximateInverter(BaseEstimator):
         # Capacity variable definitions
         if self.pre_calculated_weights:
             # c_i,j = t(i,j) * w_(p(i), p(j))
-            capacities_def_with_weights_given = np.eye(pow(N + 2, 2),
-                                                       dtype='int')
-            edge_weights = self.get_weight_scalers(N, X)
-            big_M = self.get_big_M_edges(N)
+            capacities_def_with_weights_given = np.eye(
+                pow(n_internal_nodes + 2, 2),
+                dtype='int')
+            edge_weights = self.get_weight_scalers(n_internal_nodes, X)
+            big_M = self.get_big_M_edges(n_internal_nodes)
             # RHS
             capacities_def_rhs = (
                     weighted_adj * edge_weights + big_M
             ).flatten()
         else:
             # c_i,j - t(i,j) * w_(p(i), p(j)) = 0
-            pitch_class_indexing = X[:, 3] * 2 + np.indices((N,),
+            pitch_class_indexing = X[:, 3] * 2 + np.indices((n_internal_nodes,),
                                                             dtype='int') % 2
             pc_idx_with_src_sink = np.append(pitch_class_indexing, [24, 25])
-            pc_edge_2d_idx = pc_idx_with_src_sink[np.indices((N + 2, N + 2))]
+            pc_edge_2d_idx = pc_idx_with_src_sink[
+                np.indices((n_internal_nodes + 2, n_internal_nodes + 2))]
             pc_edge_1d_idx = (
                     pc_edge_2d_idx[0] * 26 + pc_edge_2d_idx[1]).flatten()
-            pitch_based_capacity = np.zeros(pow(N + 2, 2), pow(26, 2))
+            pitch_based_capacity = np.zeros(pow(n_internal_nodes + 2, 2),
+                                            pow(26, 2))
             pitch_based_capacity[
-                np.indices((pow(N + 2, 2),)),
+                np.indices((pow(n_internal_nodes + 2, 2),)),
                 pc_edge_1d_idx
             ] = weighted_adj.flatten()
             capacity_def_with_weights_variable = np.concatenate([
-                np.eye(pow(N + 2, 2)), -pitch_based_capacity
+                np.eye(pow(n_internal_nodes + 2, 2)), -pitch_based_capacity
             ], axis=1)
             # RHS
-            capacities_def_rhs = np.zeros((pow(N + 2, 2)), dtype=int)
+            capacities_def_rhs = np.zeros((pow(n_internal_nodes + 2, 2)),
+                                          dtype=int)
 
         # ----------------------------------------
         # INEQUALITY CONSTRAINTS
         # f_(i,j) <= c_(i,j)
         capacity_conditions = np.concatenate(
             [
-                np.eye(pow(N + 2, 2), dtype='int'),
-                -np.eye(pow(N + 2, 2), dtype='int')
+                np.eye(pow(n_internal_nodes + 2, 2), dtype='int'),
+                -np.eye(pow(n_internal_nodes + 2, 2), dtype='int')
             ],
             axis=1
         )
@@ -202,26 +207,30 @@ class ApproximateInverter(BaseEstimator):
         # SPACED EQUALITY CONSTRAINTS
         # add space for delta variable and pitch class weight matrix
         flow_conditions_spaced = pad(
-            (N, 2 * pow(N + 2, 2) + 1 + pow(26, 2)),
+            (
+            n_internal_nodes, 2 * pow(n_internal_nodes + 2, 2) + 1 + pow(26, 2)),
             flow_conditions,
             np.indices(flow_conditions.shape)
         )
 
         duality_constraint_spaced = pad(
-            (1, 2 * pow(N + 2, 2) + 1 + pow(26, 2)),
+            (1, 2 * pow(n_internal_nodes + 2, 2) + 1 + pow(26, 2)),
             duality_constraint,
             np.concatenate([
-                np.indices((N + 2,)) + N * (N + 2),
-                np.indices((pow(N + 2, 2),)),
+                np.indices((n_internal_nodes + 2,)) + n_internal_nodes * (
+                            n_internal_nodes + 2),
+                np.indices((pow(n_internal_nodes + 2, 2),)),
                 [-1]
             ])
         )
 
         if self.pre_calculated_weights:
-            abs_idx = np.indices((pow(N + 2, 2), pow(N + 2, 2)))
-            abs_idx[1] += pow(N + 2, 2)
+            abs_idx = np.indices(
+                (pow(n_internal_nodes + 2, 2), pow(n_internal_nodes + 2, 2)))
+            abs_idx[1] += pow(n_internal_nodes + 2, 2)
             capacities_def_spaced = pad(
-                (pow(N + 2, 2), 2 * pow(N + 2, 2) + 1 + pow(24, 2)),
+                (pow(n_internal_nodes + 2, 2),
+                 2 * pow(n_internal_nodes + 2, 2) + 1 + pow(24, 2)),
                 capacities_def_with_weights_given,
                 abs_idx
             )
@@ -229,9 +238,11 @@ class ApproximateInverter(BaseEstimator):
             pitch_based_capacity_abs_idx = np.indices(
                 capacity_def_with_weights_variable.shape
             )
-            pitch_based_capacity_abs_idx[1] += 2 * pow(N + 2, 2) + 1
-            capacity_idx = np.indices((pow(N + 2, 2), pow(N + 2, 2)))
-            capacity_idx[1] += pow(N + 2, 2)
+            pitch_based_capacity_abs_idx[1] += 2 * pow(n_internal_nodes + 2,
+                                                       2) + 1
+            capacity_idx = np.indices(
+                (pow(n_internal_nodes + 2, 2), pow(n_internal_nodes + 2, 2)))
+            capacity_idx[1] += pow(n_internal_nodes + 2, 2)
             capacity_definition_spaced_idx = np.concatenate([
                 capacity_idx,
                 pitch_based_capacity_abs_idx
@@ -239,7 +250,7 @@ class ApproximateInverter(BaseEstimator):
             capacities_def_spaced = pad(
                 (
                     capacity_def_with_weights_variable.shape[0],
-                    2 * pow(N + 2, 2) + 1 + pow(26, 2)
+                    2 * pow(n_internal_nodes + 2, 2) + 1 + pow(26, 2)
                 ),
                 capacity_def_with_weights_variable,
                 capacity_definition_spaced_idx
@@ -249,20 +260,22 @@ class ApproximateInverter(BaseEstimator):
         # SPACED INEQUALITY CONSTRAINTS
         # add space for delta variable and pitch class weight matrix
         capacity_conditions_spaced = pad(
-            (N + 2, 2 * pow(N + 2, 2) + 1 + pow(26, 2)),
+            (n_internal_nodes + 2,
+             2 * pow(n_internal_nodes + 2, 2) + 1 + pow(26, 2)),
             capacity_conditions,
             np.indices(capacity_conditions.shape)
         )
-        capacity_conditions_rhs = np.zeros((pow(N + 2, 2)), dtype=int)
+        capacity_conditions_rhs = np.zeros((pow(n_internal_nodes + 2, 2)),
+                                           dtype=int)
 
         # ----------------------------------------
         # SET UP LINEAR PROGRAM
         if self.pre_calculated_weights:
-            c = np.zeros((2 * pow(N + 2, 2) + 1))
-            c[2 * pow(N + 2, 2)] = self.accuracy
+            c = np.zeros((2 * pow(n_internal_nodes + 2, 2) + 1))
+            c[2 * pow(n_internal_nodes + 2, 2)] = self.accuracy
         else:
-            c = np.zeros((2 * pow(N + 2, 2) + 1 + pow(26, 2)))
-            c[2 * pow(N + 2, 2)] = self.accuracy
+            c = np.zeros((2 * pow(n_internal_nodes + 2, 2) + 1 + pow(26, 2)))
+            c[2 * pow(n_internal_nodes + 2, 2)] = self.accuracy
             c[-pow(26, 2):] = -1
         A_eq = np.concatenate([
             flow_conditions_spaced,
@@ -279,7 +292,8 @@ class ApproximateInverter(BaseEstimator):
         if self.pre_calculated_weights:
             bounds = (0, 100)
         else:
-            ub = np.full((2 * pow(N + 2, 2) + 1 + pow(26, 2)), 100)
+            ub = np.full((2 * pow(n_internal_nodes + 2, 2) + 1 + pow(26, 2)),
+                         100)
             ub[-pow(26, 2):] = edge_weights
             pc_scheme = self.internal_scheme
             pc_scheme_idx = np.indices(12) * 2
@@ -295,7 +309,7 @@ class ApproximateInverter(BaseEstimator):
         output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
                           bounds=bounds)
         # Accuracy score given by size of duality gap of linear program
-        self._score = output_.x[2 * pow(N + 2, 2)]
+        self._score = output_.x[2 * pow(n_internal_nodes + 2, 2)]
 
         # Record edge weight schemes
         if not self.pre_calculated_weights:
@@ -312,13 +326,13 @@ class ApproximateInverter(BaseEstimator):
                 ].flatten()
             ]
 
-    def get_weight_scalers(self, N, X):
+    def get_weight_scalers(self, n_internal_nodes, X):
         """
         Get weight scalers based on the pitches of the notes in the dataset X.
 
         Parameters
         ----------
-        N: int
+        n_internal_nodes: int
         X: numpy.ndarray
 
         Returns
@@ -326,15 +340,16 @@ class ApproximateInverter(BaseEstimator):
         numpy.ndarray
 
         """
-        idx = np.indices((N // 2,), dtype='int') * 2
+        idx = np.indices((n_internal_nodes // 2,), dtype='int') * 2
         source_edges = self.source_edge_scheme[X[:, 3]]
         source_edges[idx + 1] = 0
         sink_edges = self.sink_edge_scheme[X[:, 3]]
         sink_edges[idx] = 0
         edge_weights = self.internal_scheme[
             tuple(
-                (X[:, 3] * 2 + np.indices((N,), dtype='int')[0] % 2)[
-                    np.indices((N, N), dtype='int')
+                (X[:, 3] * 2 + np.indices((n_internal_nodes,), dtype='int')[
+                    0] % 2)[
+                    np.indices((n_internal_nodes, n_internal_nodes), dtype='int')
                 ]
             )
         ]
@@ -343,7 +358,7 @@ class ApproximateInverter(BaseEstimator):
 
         return edge_weights
 
-    def get_big_M_edges(self, N):
+    def get_big_M_edges(self, n_internal_nodes):
         """
         Output the "big M" component graph which connects the up node and the
         down node corresponding to a single note in the musical score by a
@@ -351,7 +366,7 @@ class ApproximateInverter(BaseEstimator):
 
         Parameters
         ----------
-        N: int
+        n_internal_nodes: int
 
         Returns
         -------
@@ -359,9 +374,12 @@ class ApproximateInverter(BaseEstimator):
 
         """
 
-        internal_adj = np.tile([[0, 0], [1, 0]], [N // 2, N // 2]) * np.repeat(
+        internal_adj = np.tile([[0, 0], [1, 0]], [n_internal_nodes // 2,
+                                                  n_internal_nodes // 2]) * \
+                       np.repeat(
             np.repeat(
-                np.eye(N // 2, N // 2, dtype='int'),
+                np.eye(n_internal_nodes // 2, n_internal_nodes // 2,
+                       dtype='int'),
                 [2],
                 axis=1),
             [2],
@@ -373,13 +391,13 @@ class ApproximateInverter(BaseEstimator):
 
         return big_M
 
-    def extract_adjacencies(self, N, X):
+    def extract_adjacencies(self, n_internal_nodes, X):
         """
         Generate unweighted and weighted adjacency structures from node data X.
 
         Parameters
         ----------
-        N: int
+        n_internal_nodes: int
         X: numpy.ndarray
 
         Returns
@@ -399,8 +417,8 @@ class ApproximateInverter(BaseEstimator):
         # Remove adjacency within the same note (between notes in the same
         # event is fine)
         within_chain_adjs[0] *= -f_inverse(
-            lambda x: x // 2, (N, N), np.eye(
-                N // 2, dtype='int')
+            lambda x: x // 2, (n_internal_nodes, n_internal_nodes), np.eye(
+                n_internal_nodes // 2, dtype='int')
         )
 
         # Connect concurrent notes in different parts
@@ -410,20 +428,23 @@ class ApproximateInverter(BaseEstimator):
 
         # Add a scale factor according to position in the score - present in
         # the input matrix 'X'
-        idx = np.indices((N, N), sparse=True)
+        idx = np.indices((n_internal_nodes, n_internal_nodes), sparse=True)
         timefactor = X[:, -1][idx[0]] * X[:, -1][idx[1]]
         timefactor = add_node(timefactor, out_edges=X[:, -1])
         timefactor = add_node(timefactor, in_edges=X[:, -1])
 
         # Generate adjacency matrix
-        source_adj = np.zeros((N,), dtype='int')
-        sink_adj = np.zeros((N,), dtype='int')
-        idx = np.indices((N // 2,), dtype='int') * 2
+        source_adj = np.zeros((n_internal_nodes,), dtype='int')
+        sink_adj = np.zeros((n_internal_nodes,), dtype='int')
+        idx = np.indices((n_internal_nodes // 2,), dtype='int') * 2
         source_adj[idx] = 1
         sink_adj[idx + 1] = 1
-        internal_adj = np.tile([[0, 0], [1, 0]], [N // 2, N // 2]) * np.repeat(
+        internal_adj = np.tile([[0, 0], [1, 0]], [n_internal_nodes // 2,
+                                                  n_internal_nodes // 2]) * \
+                       np.repeat(
             np.repeat(
-                np.eye(N // 2, N // 2, dtype='int'),
+                np.eye(n_internal_nodes // 2, n_internal_nodes // 2,
+                       dtype='int'),
                 [2],
                 axis=1),
             [2],
@@ -465,69 +486,84 @@ class ApproximateInverter(BaseEstimator):
         Variable order: x_i (N), y_ij ((N+2)^2) with final two columns of
         implicit square of variables s, and t
         """
-        N = X.shape[0]
-        adj, weighted_adj = self.extract_adjacencies(N, X)
-        edge_weights = self.get_weight_scalers(N, X)
-        big_M = self.get_big_M_edges(N)
+        n_internal_nodes = X.shape[0]
+        adj, weighted_adj = self.extract_adjacencies(n_internal_nodes, X)
+        edge_weights = self.get_weight_scalers(n_internal_nodes, X)
+        big_M = self.get_big_M_edges(n_internal_nodes)
         big_M_adj = big_M
         big_M_adj[big_M[np.isinf(big_M)]] = 1
         adj += big_M_adj
 
         # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
         internal_adj = adj[-2:, -2:]
-        sq_idx = np.indices((N, N))
-        internal_pairings = np.zeros((pow(N, 2), N), dtype=int)
-        internal_pairings[np.arange(pow(N, 2)), sq_idx[0].flatten()] -= 1
-        internal_pairings[np.arange(pow(N, 2)), sq_idx[1].flatten()] += 1
-        edge_indicators = np.zeros((pow(N, 2), pow(N + 2, 2)), dtype=int)
+        sq_idx = np.indices((n_internal_nodes, n_internal_nodes))
+        internal_pairings = np.zeros(
+            (pow(n_internal_nodes, 2), n_internal_nodes), dtype=int)
+        internal_pairings[
+            np.arange(pow(n_internal_nodes, 2)), sq_idx[0].flatten()] -= 1
+        internal_pairings[
+            np.arange(pow(n_internal_nodes, 2)), sq_idx[1].flatten()] += 1
+        edge_indicators = np.zeros(
+            (pow(n_internal_nodes, 2), pow(n_internal_nodes + 2, 2)), dtype=int)
         edge_indicators[
-            N * sq_idx[0] + sq_idx[1],
-            (N + 2) * sq_idx[0] + sq_idx[1]
+            n_internal_nodes * sq_idx[0] + sq_idx[1],
+            (n_internal_nodes + 2) * sq_idx[0] + sq_idx[1]
         ] = internal_adj[tuple(sq_idx)]
 
         internal_constraints = np.concatenate([internal_pairings,
                                                edge_indicators], axis=1)
-        internal_constraints *= internal_adj.reshape((pow(N, 2), 1))
-        internal_constraints_rhs = np.zeros(pow(N, 2), dtype=int)
+        internal_constraints *= internal_adj.reshape(
+            (pow(n_internal_nodes, 2), 1))
+        internal_constraints_rhs = np.zeros(pow(n_internal_nodes, 2), dtype=int)
 
         # x_i - y_(s, i) <=0 for all i: (s,i) is an edge
         source_adj = adj[-2]
-        source_pairings = np.zeros((N // 2, N), dtype=int)
-        source_pairings[np.arange(N // 2), np.arange(N // 2) * 2] = 1
-        source_edge_indicators = np.zeros((N // 2, pow(N + 2, 2)), dtype=int)
+        source_pairings = np.zeros((n_internal_nodes // 2, n_internal_nodes),
+                                   dtype=int)
+        source_pairings[np.arange(n_internal_nodes // 2), np.arange(
+            n_internal_nodes // 2) * 2] = 1
+        source_edge_indicators = np.zeros(
+            (n_internal_nodes // 2, pow(n_internal_nodes + 2, 2)), dtype=int)
         source_edge_indicators[
-            np.arange(N // 2),
-            (N + 2) * N + np.arange(N // 2) * 2
-        ] = source_adj[np.arange(N // 2) * 2]
+            np.arange(n_internal_nodes // 2),
+            (n_internal_nodes + 2) * n_internal_nodes + np.arange(
+                n_internal_nodes // 2) * 2
+        ] = source_adj[np.arange(n_internal_nodes // 2) * 2]
         source_constraints = np.concatenate([source_pairings,
                                              source_edge_indicators], axis=1)
         source_constraints *= source_adj[
-            np.arange(N // 2) * 2
-            ].reshape((N // 2, 1))
-        source_constraints_rhs = np.zeros(N // 2, dtype=int)
+            np.arange(n_internal_nodes // 2) * 2
+            ].reshape((n_internal_nodes // 2, 1))
+        source_constraints_rhs = np.zeros(n_internal_nodes // 2, dtype=int)
 
         # - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
         sink_adj = adj[:, -1]
-        sink_pairings = np.zeros((N // 2, N), dtype=int)
-        sink_pairings[np.arange(N // 2), np.arange(N // 2) * 2 + 1] = -1
-        sink_edge_indicators = np.zeros((N // 2, pow(N + 2, 2)), dtype=int)
+        sink_pairings = np.zeros((n_internal_nodes // 2, n_internal_nodes),
+                                 dtype=int)
+        sink_pairings[np.arange(n_internal_nodes // 2), np.arange(
+            n_internal_nodes // 2) * 2 + 1] = -1
+        sink_edge_indicators = np.zeros(
+            (n_internal_nodes // 2, pow(n_internal_nodes + 2, 2)), dtype=int)
         sink_edge_indicators[
-            np.arange(N // 2),
-            (N + 2) * (np.arange(N // 2) * 2 + 1) + (N + 1)
-        ] = sink_adj[np.arange(N // 2) * 2 + 1]
+            np.arange(n_internal_nodes // 2),
+            (n_internal_nodes + 2) * (
+                        np.arange(n_internal_nodes // 2) * 2 + 1) + (
+                        n_internal_nodes + 1)
+        ] = sink_adj[np.arange(n_internal_nodes // 2) * 2 + 1]
         sink_constraints = np.concatenate([sink_pairings,
                                            sink_edge_indicators], axis=1)
         sink_constraints *= sink_adj[
-            np.arange(N // 2) * 2 + 1
-            ].reshape((N // 2, 1))
-        sink_constraints_rhs = np.full((N // 2,), -1)
+            np.arange(n_internal_nodes // 2) * 2 + 1
+            ].reshape((n_internal_nodes // 2, 1))
+        sink_constraints_rhs = np.full((n_internal_nodes // 2,), -1)
 
         # x_i <= 1 bounds
         # x_i, y_ij >= 0 bounds (default)
-        bounds = [(0, 1)] * N + [(0, None)] * pow(N + 2, 2)
+        bounds = [(0, 1)] * n_internal_nodes + [(0, n_internal_nodes)] * pow(
+            n_internal_nodes + 2, 2)
 
         capacities = (weighted_adj * edge_weights + big_M).flatten()
-        c = np.concatenate([np.zeros(N, dtype=int), capacities])
+        c = np.concatenate([np.zeros(n_internal_nodes, dtype=int), capacities])
         A_ub = np.concatenate([
             internal_constraints,
             source_constraints,
