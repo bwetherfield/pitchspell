@@ -473,7 +473,7 @@ class ApproximateInverter(BaseEstimator):
         big_M_adj[big_M[np.isinf(big_M)]] = 1
         adj += big_M_adj
 
-        # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t
+        # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
         internal_adj = adj[-2:, -2:]
         sq_idx = np.indices((N, N))
         internal_pairings = np.zeros((pow(N, 2), N), dtype=int)
