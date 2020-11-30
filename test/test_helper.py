@@ -1,11 +1,10 @@
-from unittest import TestCase
 import numpy as np
 
 from pitchspell.helper import generate_bounds, generate_weight_upper_bounds, \
     generate_cost_func
 
 
-class TestHelperFunctions(TestCase):
+class TestHelperFunctions:
     internal_scheme = np.array([
         [0, 1, 0, 2, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 2, 1, 0, 1, 0, 1, 0],
         [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0, 1, 0, 1, 0, 1],
@@ -93,14 +92,14 @@ class TestHelperFunctions(TestCase):
         bounds = generate_bounds(True, self.internal_scheme,
                                  self.source_edge_scheme,
                                  self.sink_edge_scheme, 676)
-        self.assertEqual(bounds, (0, None))
+        assert bounds == (0, None)
 
     def test_generate_weight_upper_bounds(self):
         upper_bounds = generate_weight_upper_bounds(self.internal_scheme,
                                                     self.sink_edge_scheme,
                                                     self.source_edge_scheme)
 
-        self.assertTrue(np.array_equal(upper_bounds, self.target))
+        np.testing.assert_array_equal(upper_bounds, self.target)
 
     def test_generate_bounds_weights_variable(self):
         bounds = generate_bounds(False, self.internal_scheme,
@@ -109,18 +108,14 @@ class TestHelperFunctions(TestCase):
         bound_target = [(0, None)] + list(
             zip(np.zeros_like(self.target).flatten(), self.target.flatten())
         )
-        self.assertTrue(
-            np.array_equal(bounds, bound_target)
-        )
+        np.testing.assert_array_equal(bounds, bound_target)
 
     def test_generate_cost_function_with_weights_fixed(self):
         c = generate_cost_func(4, True, 9, 19)
         target = 18 * [0] + [4]
-        self.assertCountEqual(c, target)
-        self.assertTrue(np.array_equal(c, target))
+        np.testing.assert_array_equal(c, target)
 
     def test_generate_cost_function_with_weights_variable(self):
         c = generate_cost_func(4, False, 9, 19 + 676)
         target = 18 * [0] + [4] + 676 * [-1]
-        self.assertCountEqual(c, target)
-        self.assertTrue(np.array_equal(c, target))
+        np.testing.assert_array_equal(c, target)
