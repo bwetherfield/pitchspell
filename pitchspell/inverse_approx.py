@@ -226,7 +226,7 @@ class ApproximateInverter(BaseEstimator):
         ])
         A_ub = capacity_conditions_spaced
         b_ub = capacity_conditions_rhs
-        bounds = self.generate_bounds(edge_weights, n_variables)
+        bounds = self.generate_bounds(n_variables)
 
         output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
                           bounds=bounds)
@@ -348,11 +348,9 @@ class ApproximateInverter(BaseEstimator):
                                          self.pre_calculated_weights, n_edges,
                                          n_variables)
 
-    def generate_bounds(self, edge_weights, n_variables):
-        return generate_bounds(self.pre_calculated_weights,
-                               self.internal_scheme,
-                               self.source_edge_scheme,
-                               self.sink_edge_scheme, edge_weights,
+    def generate_bounds(self, n_variables):
+        return generate_bounds(self.pre_calculated_weights, self.internal_scheme,
+                               self.source_edge_scheme, self.sink_edge_scheme,
                                n_variables)
 
     def space_capacities_def(self, capacities_def, n_edges, n_variables):

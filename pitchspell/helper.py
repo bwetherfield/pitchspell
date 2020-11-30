@@ -10,14 +10,12 @@ n_pitch_class_nodes = 26  # n_pitch_class_internal_nodes + 2
 n_pitch_class_edges = 676  # pow(pitch_class_nodes, 2)
 
 
-def generate_bounds(pre_calculated_weights, internal_scheme,
-                    source_edge_scheme, sink_edge_scheme, edge_weights,
-                    n_variables):
+def generate_bounds(pre_calculated_weights, internal_scheme, source_edge_scheme,
+                    sink_edge_scheme, n_variables):
     if pre_calculated_weights:
         bounds = (0, None)
     else:
         ub = np.full((n_variables), None)
-        ub[-n_pitch_class_edges:] = edge_weights
         pc_scheme = internal_scheme
         pc_scheme_idx = np.indices(n_pitch_classes) * 2
         pc_source_edges = np.zeros(n_pitch_class_internal_nodes, dtype=int)
@@ -26,7 +24,7 @@ def generate_bounds(pre_calculated_weights, internal_scheme,
         pc_sink_edges[pc_scheme_idx + 1] = sink_edge_scheme
         pc_scheme = add_node(pc_scheme, out_edges=pc_source_edges)
         pc_scheme = add_node(pc_scheme, in_edges=pc_sink_edges)
-        ub[-n_pitch_class_edges:] = n_pitch_class_nodes * np.clip(pc_scheme,
+        ub[:-n_pitch_class_edges] = n_pitch_class_nodes * np.clip(pc_scheme,
                                                                   0, 1)
         bounds = list(zip(np.zeros_like(ub, dtype=int), ub))
     return bounds
