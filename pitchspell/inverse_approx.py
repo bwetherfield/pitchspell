@@ -176,7 +176,7 @@ class ApproximateInverter(BaseEstimator):
                 dtype='int')
             edge_weights = self.get_weight_scalers(
                 half_internal_nodes, n_internal_nodes, X)
-            big_M = self.get_big_M_edges(half_internal_nodes)
+            big_M_adj, big_M = self.get_big_M_edges(half_internal_nodes)
             # RHS
             capacities_def_rhs = (
                     weighted_adj * edge_weights + big_M
@@ -386,27 +386,26 @@ class ApproximateInverter(BaseEstimator):
 
         Returns
         -------
-        numpy.ndarray
+        numpy.ndarray, numpy.ndarray
 
         """
 
-        internal_adj = np.tile([[0, 0], [1, 0]], [half_internal_nodes,
-                                                  half_internal_nodes]) * \
-                       np.repeat(
-                           np.repeat(
-                               np.eye(half_internal_nodes,
-                                      half_internal_nodes,
-                                      dtype='int'),
-                               [2],
-                               axis=1),
-                           [2],
-                           axis=0)
-        big_M = np.inf * internal_adj
-        big_M[np.isnan(big_M)] = 0
+        adj_within = np.tile(
+            [[0, 0], [1, 0]],
+            [half_internal_nodes, half_internal_nodes]
+        ) * np.repeat(
+            np.repeat(
+                np.eye(half_internal_nodes, dtype='int'),
+                2,
+                axis=1),
+            2,
+            axis=0)
+        big_M = adj_within
+        big_M[big_M == 1] = np.inf
         big_M = add_node(big_M)
         big_M = add_node(big_M)
 
-        return big_M
+        return adj_within, big_M
 
     def extract_adjacencies(self, half_internal_nodes, n_internal_nodes, X):
         """
@@ -457,18 +456,7 @@ class ApproximateInverter(BaseEstimator):
         idx = np.indices((half_internal_nodes,), dtype='int') * 2
         source_adj[idx] = 1
         sink_adj[idx + 1] = 1
-        internal_adj = np.tile([[0, 0], [1, 0]], [half_internal_nodes,
-                                                  half_internal_nodes]) * \
-                       np.repeat(
-                           np.repeat(
-                               np.eye(half_internal_nodes,
-                                      half_internal_nodes,
-                                      dtype='int'),
-                               [2],
-                               axis=1),
-                           [2],
-                           axis=0)
-        adj = sum(within_chain_adjs) + between_part_adj + internal_adj
+        adj = sum(within_chain_adjs) + between_part_adj
         adj = add_node(adj, out_edges=source_adj)
         adj = add_node(adj, in_edges=sink_adj)
 
@@ -515,10 +503,7 @@ class ApproximateInverter(BaseEstimator):
         )
         edge_weights = self.get_weight_scalers(
             half_internal_nodes, n_internal_nodes, X)
-        big_M = self.get_big_M_edges(half_internal_nodes)
-        big_M_adj = big_M
-        big_M_adj[big_M[np.isinf(big_M)]] = 1
-        adj += big_M_adj
+        big_M_adj, big_M = self.get_big_M_edges(half_internal_nodes)
 
         # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
         internal_adj = adj[-2:, -2:]
