@@ -16,18 +16,26 @@ def generate_bounds(pre_calculated_weights, internal_scheme, source_edge_scheme,
         bounds = (0, None)
     else:
         ub = np.full((n_variables), None)
-        pc_scheme = internal_scheme
-        pc_scheme_idx = np.indices(n_pitch_classes) * 2
-        pc_source_edges = np.zeros(n_pitch_class_internal_nodes, dtype=int)
-        pc_source_edges[pc_scheme_idx] = source_edge_scheme
-        pc_sink_edges = np.zeros(n_pitch_class_internal_nodes + 1, dtype=int)
-        pc_sink_edges[pc_scheme_idx + 1] = sink_edge_scheme
-        pc_scheme = add_node(pc_scheme, out_edges=pc_source_edges)
-        pc_scheme = add_node(pc_scheme, in_edges=pc_sink_edges)
-        ub[:-n_pitch_class_edges] = n_pitch_class_nodes * np.clip(pc_scheme,
-                                                                  0, 1)
+        weight_upper_bounds = generate_weight_upper_bounds(internal_scheme,
+                                                           sink_edge_scheme,
+                                                           source_edge_scheme)
+        ub[:-n_pitch_class_edges] = weight_upper_bounds
         bounds = list(zip(np.zeros_like(ub, dtype=int), ub))
     return bounds
+
+
+def generate_weight_upper_bounds(internal_scheme, sink_edge_scheme,
+                                 source_edge_scheme):
+    pc_scheme = internal_scheme
+    pc_scheme_idx = np.arange(n_pitch_classes) * 2
+    pc_source_edges = np.zeros(n_pitch_class_internal_nodes, dtype=int)
+    pc_source_edges[pc_scheme_idx] = source_edge_scheme
+    pc_sink_edges = np.zeros(n_pitch_class_internal_nodes + 1, dtype=int)
+    pc_sink_edges[pc_scheme_idx + 1] = sink_edge_scheme
+    pc_scheme = add_node(pc_scheme, out_edges=pc_source_edges)
+    pc_scheme = add_node(pc_scheme, in_edges=pc_sink_edges)
+    weight_upper_bounds = 26 * np.clip(pc_scheme, 0, 1)
+    return weight_upper_bounds
 
 
 def generate_cost_func(accuracy, pre_calculated_weights, n_edges,
