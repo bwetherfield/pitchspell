@@ -1,11 +1,13 @@
-import numpy
 import numpy as np
 
-from pitchspell.inverse_approx import n_pitch_class_edges, n_pitch_classes, \
-    n_pitch_class_internal_nodes, n_pitch_class_nodes
 from pitchspell.minimum_cut import generate_complete_cut
 from pitchspell.prepare_edges import add_node, hop_adjacencies, concurrencies
 from pitchspell.pullback import pullback, f_inverse
+
+n_pitch_classes = 12
+n_pitch_class_internal_nodes = 24  # n_pitch_classes * 2
+n_pitch_class_nodes = 26  # n_pitch_class_internal_nodes + 2
+n_pitch_class_edges = 676  # pow(pitch_class_nodes, 2)
 
 
 def generate_bounds(pre_calculated_weights, internal_scheme,

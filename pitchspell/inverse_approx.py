@@ -8,13 +8,9 @@ from pitchspell.helper import generate_bounds, generate_cost_func, \
     get_big_M_edges, generate_cut, \
     generate_internal_cut_constraints, \
     generate_source_cut_constraints, generate_sink_cut_constraints, \
-    extract_adjacencies
+    extract_adjacencies, n_pitch_classes, n_pitch_class_internal_nodes, \
+    n_pitch_class_nodes, n_pitch_class_edges
 from pitchspell.pullback import pad
-
-n_pitch_classes = 12
-n_pitch_class_internal_nodes = 24  # n_pitch_classes * 2
-n_pitch_class_nodes = 26  # n_pitch_class_internal_nodes + 2
-n_pitch_class_edges = 676  # pow(pitch_class_nodes, 2)
 
 
 class ApproximateInverter(BaseEstimator):
