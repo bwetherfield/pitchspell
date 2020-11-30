@@ -38,12 +38,11 @@ def generate_weight_upper_bounds(internal_scheme, sink_edge_scheme,
     return weight_upper_bounds
 
 
-def generate_cost_func(accuracy, pre_calculated_weights, n_edges,
-                       n_variables):
+def generate_cost_func(accuracy, pre_calculated_weights, n_edges, n_variables):
     c = np.zeros((n_variables), dtype=int)
     c[2 * n_edges] = accuracy
     if not pre_calculated_weights:
-        c[:-n_pitch_class_edges] = -1
+        c[-n_pitch_class_edges:] = -1
     return c
 
 

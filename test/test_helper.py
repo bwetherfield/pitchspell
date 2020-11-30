@@ -1,7 +1,8 @@
 from unittest import TestCase
 import numpy as np
 
-from pitchspell.helper import generate_bounds, generate_weight_upper_bounds
+from pitchspell.helper import generate_bounds, generate_weight_upper_bounds, \
+    generate_cost_func
 
 
 class TestHelperFunctions(TestCase):
@@ -111,3 +112,13 @@ class TestHelperFunctions(TestCase):
         self.assertTrue(
             np.array_equal(bounds, bound_target)
         )
+
+    def test_generate_cost_function_with_weights_fixed(self):
+        c = generate_cost_func(4, True, 9, 19)
+        target = 18 * [0] + [4]
+        self.assertCountEqual(c, target)
+
+    def test_generate_cost_function_with_weights_variable(self):
+        c = generate_cost_func(4, False, 9, 19 + 676)
+        target = 18 * [0] + [4] + 676 * [-1]
+        self.assertCountEqual(c, target)
