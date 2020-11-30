@@ -19,7 +19,7 @@ def generate_bounds(pre_calculated_weights, internal_scheme, source_edge_scheme,
         weight_upper_bounds = generate_weight_upper_bounds(internal_scheme,
                                                            sink_edge_scheme,
                                                            source_edge_scheme)
-        ub[:-n_pitch_class_edges] = weight_upper_bounds
+        ub[-n_pitch_class_edges:] = weight_upper_bounds.flatten()
         bounds = list(zip(np.zeros_like(ub, dtype=int), ub))
     return bounds
 
