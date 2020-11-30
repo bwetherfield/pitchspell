@@ -138,17 +138,17 @@ class ApproximateInverter(BaseEstimator):
         half_internal_nodes = n_internal_nodes // 2
         n_nodes = n_internal_nodes + 2
         n_edges = pow(n_nodes, 2)
-        n_variables_weights_fixed = 2 * n_edges + 1
-        n_variables_weights_variable = n_variables_weights_fixed + \
-                                       n_pitch_class_edges
-        adj, weighted_adj = self.extract_adjacencies(n_internal_nodes, X)
+        n_vars_weights_fixed = 2 * n_edges + 1
+        n_vars_weights_variable = n_vars_weights_fixed + \
+                                  n_pitch_class_edges
+        adj, weighted_adj = self.extract_adjacencies(
+            half_internal_nodes, n_internal_nodes, X)
+        internal_adj = np.zeros((n_nodes, n_nodes))
+        internal_adj[-2:, -2:] = adj[-2:, -2:]
 
         # ----------------------------------------
         # EQUALITY CONSTRAINTS
         # sum_(i=1)^n f_(i,k) - sum_(j=1)^n f_(k,j) = 0 for all k != s,t
-        internal_adj = adj
-        internal_adj[-2:] = 0
-        internal_adj[, -2:] = 0
         square_idx = np.indices((n_internal_nodes, n_internal_nodes))
         flow_conditions = np.zeros((n_internal_nodes, n_edges), dtype=int)
         flow_conditions[
@@ -176,7 +176,7 @@ class ApproximateInverter(BaseEstimator):
                 dtype='int')
             edge_weights = self.get_weight_scalers(
                 half_internal_nodes, n_internal_nodes, X)
-            big_M = self.get_big_M_edges(n_internal_nodes)
+            big_M = self.get_big_M_edges(half_internal_nodes)
             # RHS
             capacities_def_rhs = (
                     weighted_adj * edge_weights + big_M
@@ -221,14 +221,13 @@ class ApproximateInverter(BaseEstimator):
         # SPACED EQUALITY CONSTRAINTS
         # add space for delta variable and pitch class weight matrix
         flow_conditions_spaced = pad(
-            (
-                n_internal_nodes, n_variables_weights_variable),
+            (n_internal_nodes, n_vars_weights_variable),
             flow_conditions,
             np.indices(flow_conditions.shape)
         )
 
         duality_constraint_spaced = pad(
-            (1, n_variables_weights_variable),
+            (1, n_vars_weights_variable),
             duality_constraint,
             np.concatenate([
                 np.indices((n_nodes,)) + n_internal_nodes * (
@@ -244,7 +243,7 @@ class ApproximateInverter(BaseEstimator):
             abs_idx[1] += n_edges
             capacities_def_spaced = pad(
                 (n_edges,
-                 n_variables_weights_variable),
+                 n_vars_weights_variable),
                 capacities_def_with_weights_given,
                 abs_idx
             )
@@ -252,7 +251,7 @@ class ApproximateInverter(BaseEstimator):
             pitch_based_capacity_abs_idx = np.indices(
                 capacity_def_with_weights_variable.shape
             )
-            pitch_based_capacity_abs_idx[1] += n_variables_weights_fixed
+            pitch_based_capacity_abs_idx[1] += n_vars_weights_fixed
             capacity_idx = np.indices(
                 (n_edges, n_edges))
             capacity_idx[1] += n_edges
@@ -263,7 +262,7 @@ class ApproximateInverter(BaseEstimator):
             capacities_def_spaced = pad(
                 (
                     capacity_def_with_weights_variable.shape[0],
-                    n_variables_weights_variable
+                    n_vars_weights_variable
                 ),
                 capacity_def_with_weights_variable,
                 capacity_definition_spaced_idx
@@ -273,8 +272,7 @@ class ApproximateInverter(BaseEstimator):
         # SPACED INEQUALITY CONSTRAINTS
         # add space for delta variable and pitch class weight matrix
         capacity_conditions_spaced = pad(
-            (n_nodes,
-             n_variables_weights_variable),
+            (n_nodes, n_vars_weights_variable),
             capacity_conditions,
             np.indices(capacity_conditions.shape)
         )
@@ -284,10 +282,10 @@ class ApproximateInverter(BaseEstimator):
         # ----------------------------------------
         # SET UP LINEAR PROGRAM
         if self.pre_calculated_weights:
-            c = np.zeros((n_variables_weights_fixed), dtype=int)
+            c = np.zeros((n_vars_weights_fixed), dtype=int)
             c[2 * n_edges] = self.accuracy
         else:
-            c = np.zeros((n_variables_weights_variable), dtype=int)
+            c = np.zeros((n_vars_weights_variable), dtype=int)
             c[2 * n_edges] = self.accuracy
             c[-n_pitch_class_edges:] = -1
         A_eq = np.concatenate([
@@ -305,7 +303,7 @@ class ApproximateInverter(BaseEstimator):
         if self.pre_calculated_weights:
             bounds = (0, None)
         else:
-            ub = np.full((n_variables_weights_variable), None)
+            ub = np.full((n_vars_weights_variable), None)
             ub[-n_pitch_class_edges:] = edge_weights
             pc_scheme = self.internal_scheme
             pc_scheme_idx = np.indices(n_pitch_classes) * 2
@@ -376,7 +374,7 @@ class ApproximateInverter(BaseEstimator):
 
         return edge_weights
 
-    def get_big_M_edges(self, n_internal_nodes):
+    def get_big_M_edges(self, half_internal_nodes):
         """
         Output the "big M" component graph which connects the up node and the
         down node corresponding to a single note in the musical score by a
@@ -392,7 +390,6 @@ class ApproximateInverter(BaseEstimator):
 
         """
 
-        half_internal_nodes = n_internal_nodes // 2
         internal_adj = np.tile([[0, 0], [1, 0]], [half_internal_nodes,
                                                   half_internal_nodes]) * \
                        np.repeat(
@@ -411,7 +408,7 @@ class ApproximateInverter(BaseEstimator):
 
         return big_M
 
-    def extract_adjacencies(self, n_internal_nodes, X):
+    def extract_adjacencies(self, half_internal_nodes, n_internal_nodes, X):
         """
         Generate unweighted and weighted adjacency structures from node data X.
 
@@ -513,10 +510,12 @@ class ApproximateInverter(BaseEstimator):
         n_nodes = n_internal_nodes + 2
         n_edges = pow(n_nodes, 2)
         half_internal_nodes = n_internal_nodes // 2
-        adj, weighted_adj = self.extract_adjacencies(n_internal_nodes, X)
+        adj, weighted_adj = self.extract_adjacencies(
+            half_internal_nodes, n_internal_nodes, X
+        )
         edge_weights = self.get_weight_scalers(
             half_internal_nodes, n_internal_nodes, X)
-        big_M = self.get_big_M_edges(n_internal_nodes)
+        big_M = self.get_big_M_edges(half_internal_nodes)
         big_M_adj = big_M
         big_M_adj[big_M[np.isinf(big_M)]] = 1
         adj += big_M_adj
