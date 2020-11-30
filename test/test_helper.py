@@ -2,6 +2,7 @@ import numpy as np
 
 from pitchspell.helper import generate_bounds, generate_weight_upper_bounds, \
     generate_cost_func
+from pitchspell import helper
 
 
 class TestHelperFunctions:
@@ -119,3 +120,33 @@ class TestHelperFunctions:
         c = generate_cost_func(4, False, 9, 19 + 676)
         target = 18 * [0] + [4] + 676 * [-1]
         np.testing.assert_array_equal(c, target)
+
+    def test_generate_capacities_def(self):
+        assert False
+
+    def test_generate_flow_conditions(self):
+        assert False
+
+    def test_get_weight_scalers(self):
+        assert False
+
+    def test_generate_duality_constraint(self):
+        assert False
+
+    def test_get_big_m_edges(self):
+        assert False
+
+    def test_generate_cut(self):
+        assert False
+
+    def test_generate_internal_cut_constraints(self):
+        assert False
+
+    def test_generate_source_cut_constraints(self):
+        assert False
+
+    def test_generate_sink_cut_constraints(self):
+        assert False
+
+    def test_extract_adjacencies(self):
+        assert False
