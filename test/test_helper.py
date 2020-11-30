@@ -117,8 +117,10 @@ class TestHelperFunctions(TestCase):
         c = generate_cost_func(4, True, 9, 19)
         target = 18 * [0] + [4]
         self.assertCountEqual(c, target)
+        self.assertTrue(np.array_equal(c, target))
 
     def test_generate_cost_function_with_weights_variable(self):
         c = generate_cost_func(4, False, 9, 19 + 676)
         target = 18 * [0] + [4] + 676 * [-1]
         self.assertCountEqual(c, target)
+        self.assertTrue(np.array_equal(c, target))
