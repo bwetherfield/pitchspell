@@ -7,9 +7,9 @@ from pitchspell.helper import generate_bounds, generate_cost_func, \
     get_weight_scalers, generate_duality_constraint, \
     get_big_M_edges, generate_cut, \
     generate_internal_cut_constraints, \
-    generate_source_cut_constraints, generate_sink_cut_constraints
-from pitchspell.prepare_edges import hop_adjacencies, concurrencies, add_node
-from pitchspell.pullback import pullback, f_inverse, pad
+    generate_source_cut_constraints, generate_sink_cut_constraints, \
+    extract_adjacencies
+from pitchspell.pullback import pad
 
 n_pitch_classes = 12
 n_pitch_class_internal_nodes = 24  # n_pitch_classes * 2
@@ -338,56 +338,13 @@ class ApproximateInverter(BaseEstimator):
         parts = X[:, 2]
         starts = X[:, 4]
         ends = X[:, 5]
-        adj, weighted_adj = self.extract_adjacencies_helper(chains, ends, events,
-                                                            half_internal_nodes,
-                                                            n_internal_nodes,
-                                                            parts, starts)
-        return adj, weighted_adj
-
-    def extract_adjacencies_helper(self, chains, ends, events,
-                                   half_internal_nodes, n_internal_nodes, parts,
-                                   starts):
-        n_events = events.max() + 1
-        part_adj = pullback(parts)
-        chain_adj = pullback(chains) * part_adj
-        not_part_adj = -part_adj
-        within_chain_adjs = list(map(
-            lambda arr: pullback(events) * chain_adj,
-            [hop_adjacencies(i, n_events) for i in range(self.distance_cutoff)]
-        ))
-        # Remove adjacency within the same note (between notes in the same
-        # event is fine)
-        within_chain_adjs[0] *= -f_inverse(
-            lambda x: x // 2, (n_internal_nodes, n_internal_nodes), np.eye(
-                half_internal_nodes, dtype='int')
-        )
-        # Connect concurrent notes in different parts
-        between_part_adj = concurrencies(
-            starts, ends
-        ) * not_part_adj
-        # Add a scale factor according to position in the score - present in
-        # the input matrix 'X'
-        idx = np.indices((n_internal_nodes, n_internal_nodes), sparse=True)
-        timefactor = ends[idx[0]] * ends[idx[1]]
-        timefactor = add_node(timefactor, out_edges=ends)
-        timefactor = add_node(timefactor, in_edges=ends)
-        # Generate adjacency matrix
-        source_adj = np.zeros((n_internal_nodes,), dtype='int')
-        sink_adj = np.zeros((n_internal_nodes,), dtype='int')
-        idx = np.indices((half_internal_nodes,), dtype='int') * 2
-        source_adj[idx] = 1
-        sink_adj[idx + 1] = 1
-        adj = sum(within_chain_adjs) + between_part_adj
-        adj = add_node(adj, out_edges=source_adj)
-        adj = add_node(adj, in_edges=sink_adj)
-        # Adjacency with relative weights based on proximity in score
-        weighted_adj = sum([
-            pow(self.distance_rolloff, i) * adj for i, adj in
-            enumerate(within_chain_adjs)
-        ]) + self.between_part_scalar * between_part_adj
-        weighted_adj = add_node(weighted_adj, out_edges=source_adj)
-        weighted_adj = add_node(weighted_adj, in_edges=sink_adj)
-        weighted_adj *= timefactor
+        adj, weighted_adj = extract_adjacencies(self.distance_cutoff,
+                                                self.distance_rolloff,
+                                                self.between_part_scalar,
+                                                chains, ends, events,
+                                                half_internal_nodes,
+                                                n_internal_nodes,
+                                                parts, starts)
         return adj, weighted_adj
 
     def generate_cost_func(self, n_edges, n_variables):
