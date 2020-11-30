@@ -54,7 +54,7 @@ def generate_capacities_def(pre_calculated_weights, big_M, edge_weights, n_edges
     else:
         # c_i,j - t(i,j) * w_(p(i), p(j)) = 0
         pitch_class_indexing = pitch_classes * 2 + np.indices(
-            (n_internal_nodes,), dtype='int'
+            (n_internal_nodes,), dtype=int
         ) % 2
         pc_idx_with_src_sink = np.append(pitch_class_indexing,
                                          [n_pitch_class_internal_nodes,
@@ -94,16 +94,16 @@ def generate_flow_conditions(internal_adj, n_edges,
 
 def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
                        half_internal_nodes, n_internal_nodes, pitch_classes):
-    idx = np.indices((half_internal_nodes,), dtype='int') * 2
+    idx = np.indices((half_internal_nodes,), dtype=int) * 2
     source_edges = source_edge_scheme[pitch_classes]
     source_edges[idx + 1] = 0
     sink_edges = sink_edge_scheme[pitch_classes]
     sink_edges[idx] = 0
     edge_weights = internal_scheme[
         tuple(
-            (pitch_classes * 2 + np.indices((n_internal_nodes,), dtype='int')[
+            (pitch_classes * 2 + np.indices((n_internal_nodes,), dtype=int)[
                 0] % 2)[
-                np.indices((n_internal_nodes, n_internal_nodes), dtype='int')
+                np.indices((n_internal_nodes, n_internal_nodes), dtype=int)
             ]
         )
     ]
@@ -114,7 +114,7 @@ def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
 
 def generate_duality_constraint(cut, n_internal_nodes):
     duality_constraint = np.concatenate([
-        np.ones(n_internal_nodes, dtype='int'), -cut.flatten(), [-1]
+        np.ones(n_internal_nodes, dtype=int), -cut.flatten(), [-1]
     ])
     # RHS
     duality_constraint_rhs = [0]
@@ -127,7 +127,7 @@ def get_big_M_edges(half_internal_nodes):
         [half_internal_nodes, half_internal_nodes]
     ) * np.repeat(
         np.repeat(
-            np.eye(half_internal_nodes, dtype='int'),
+            np.eye(half_internal_nodes, dtype=int),
             2,
             axis=1),
         2,
@@ -234,7 +234,7 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     # event is fine)
     within_chain_adjs[0] *= -f_inverse(
         lambda x: x // 2, (n_internal_nodes, n_internal_nodes), np.eye(
-            half_internal_nodes, dtype='int')
+            half_internal_nodes, dtype=int)
     )
     # Connect concurrent notes in different parts
     between_part_adj = concurrencies(
@@ -247,9 +247,9 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     timefactor = add_node(timefactor, out_edges=ends)
     timefactor = add_node(timefactor, in_edges=ends)
     # Generate adjacency matrix
-    source_adj = np.zeros((n_internal_nodes,), dtype='int')
-    sink_adj = np.zeros((n_internal_nodes,), dtype='int')
-    idx = np.indices((half_internal_nodes,), dtype='int') * 2
+    source_adj = np.zeros((n_internal_nodes,), dtype=int)
+    sink_adj = np.zeros((n_internal_nodes,), dtype=int)
+    idx = np.indices((half_internal_nodes,), dtype=int) * 2
     source_adj[idx] = 1
     sink_adj[idx + 1] = 1
     adj = sum(within_chain_adjs) + between_part_adj
