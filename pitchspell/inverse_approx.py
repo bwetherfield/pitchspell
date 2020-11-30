@@ -146,8 +146,8 @@ class ApproximateInverter(BaseEstimator):
         n_variables = 2 * n_edges + 1 if self.pre_calculated_weights else \
             2 * n_edges + 1 + n_pitch_class_edges
 
-        adj, weighted_adj = self.extract_adjacencies(
-            half_internal_nodes, n_internal_nodes, X)
+        adj, weighted_adj = self.extract_adjacencies(half_internal_nodes,
+                                                     n_internal_nodes, X)
         internal_adj = np.zeros((n_nodes, n_nodes))
         internal_adj[-2:, -2:] = adj[-2:, -2:]
 
@@ -166,18 +166,12 @@ class ApproximateInverter(BaseEstimator):
 
         # Capacity variable definitions
         big_M_adj, big_M = self.get_big_M_edges(half_internal_nodes)
-        edge_weights = self.get_weight_scalers(
-            half_internal_nodes, n_internal_nodes, X)
+        edge_weights = self.get_weight_scalers(half_internal_nodes,
+                                               n_internal_nodes, X)
         capacities_def, capacities_def_rhs = \
-            self.generate_capacities_def(
-                X,
-                big_M,
-                edge_weights,
-                n_edges,
-                n_internal_nodes,
-                n_nodes,
-                weighted_adj
-            )
+            self.generate_capacities_def(big_M, edge_weights, n_edges,
+                                         n_internal_nodes, n_nodes, weighted_adj,
+                                         X)
 
         # ----------------------------------------
         # INEQUALITY CONSTRAINTS
@@ -286,11 +280,10 @@ class ApproximateInverter(BaseEstimator):
         n_nodes = n_internal_nodes + 2
         n_edges = pow(n_nodes, 2)
         half_internal_nodes = n_internal_nodes // 2
-        adj, weighted_adj = self.extract_adjacencies(
-            half_internal_nodes, n_internal_nodes, X
-        )
-        edge_weights = self.get_weight_scalers(
-            half_internal_nodes, n_internal_nodes, X)
+        adj, weighted_adj = self.extract_adjacencies(half_internal_nodes,
+                                                     n_internal_nodes, X)
+        edge_weights = self.get_weight_scalers(half_internal_nodes,
+                                               n_internal_nodes, X)
         big_M_adj, big_M = self.get_big_M_edges(half_internal_nodes)
 
         # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
@@ -340,34 +333,44 @@ class ApproximateInverter(BaseEstimator):
         numpy.ndarray, numpy.ndarray
 
         """
-        n_events = X[:, 0].max() + 1
-        part_adj = pullback(X[:, 2])
-        chain_adj = pullback(X[:, 1]) * part_adj
+        events = X[:, 0]
+        chains = X[:, 1]
+        parts = X[:, 2]
+        starts = X[:, 4]
+        ends = X[:, 5]
+        adj, weighted_adj = self.extract_adjacencies_helper(chains, ends, events,
+                                                            half_internal_nodes,
+                                                            n_internal_nodes,
+                                                            parts, starts)
+        return adj, weighted_adj
+
+    def extract_adjacencies_helper(self, chains, ends, events,
+                                   half_internal_nodes, n_internal_nodes, parts,
+                                   starts):
+        n_events = events.max() + 1
+        part_adj = pullback(parts)
+        chain_adj = pullback(chains) * part_adj
         not_part_adj = -part_adj
         within_chain_adjs = list(map(
-            lambda arr: pullback(X[:, 0]) * chain_adj,
+            lambda arr: pullback(events) * chain_adj,
             [hop_adjacencies(i, n_events) for i in range(self.distance_cutoff)]
         ))
-
         # Remove adjacency within the same note (between notes in the same
         # event is fine)
         within_chain_adjs[0] *= -f_inverse(
             lambda x: x // 2, (n_internal_nodes, n_internal_nodes), np.eye(
                 half_internal_nodes, dtype='int')
         )
-
         # Connect concurrent notes in different parts
         between_part_adj = concurrencies(
-            X[:, 4], X[:, 5]
+            starts, ends
         ) * not_part_adj
-
         # Add a scale factor according to position in the score - present in
         # the input matrix 'X'
         idx = np.indices((n_internal_nodes, n_internal_nodes), sparse=True)
-        timefactor = X[:, -1][idx[0]] * X[:, -1][idx[1]]
-        timefactor = add_node(timefactor, out_edges=X[:, -1])
-        timefactor = add_node(timefactor, in_edges=X[:, -1])
-
+        timefactor = ends[idx[0]] * ends[idx[1]]
+        timefactor = add_node(timefactor, out_edges=ends)
+        timefactor = add_node(timefactor, in_edges=ends)
         # Generate adjacency matrix
         source_adj = np.zeros((n_internal_nodes,), dtype='int')
         sink_adj = np.zeros((n_internal_nodes,), dtype='int')
@@ -377,7 +380,6 @@ class ApproximateInverter(BaseEstimator):
         adj = sum(within_chain_adjs) + between_part_adj
         adj = add_node(adj, out_edges=source_adj)
         adj = add_node(adj, in_edges=sink_adj)
-
         # Adjacency with relative weights based on proximity in score
         weighted_adj = sum([
             pow(self.distance_rolloff, i) * adj for i, adj in
@@ -433,12 +435,12 @@ class ApproximateInverter(BaseEstimator):
             )
         return capacities_def_spaced
 
-    def generate_capacities_def(self, X, big_M, edge_weights, n_edges,
-                                n_internal_nodes, n_nodes, weighted_adj):
-        return generate_capacities_def(self.pre_calculated_weights, X,
-                                              big_M, edge_weights,
-                                              n_edges, n_internal_nodes,
-                                              n_nodes, weighted_adj)
+    def generate_capacities_def(self, big_M, edge_weights, n_edges,
+                                n_internal_nodes, n_nodes, weighted_adj, X):
+        X = X[:, 3]
+        return generate_capacities_def(self.pre_calculated_weights, big_M,
+                                       edge_weights, n_edges, n_internal_nodes,
+                                       n_nodes, weighted_adj, X)
 
     def generate_duality_constraint(self, cut, n_internal_nodes):
         duality_constraint, duality_constraint_rhs = \
@@ -458,19 +460,18 @@ class ApproximateInverter(BaseEstimator):
 
         Parameters
         ----------
+        X
         n_internal_nodes: int
-        X: numpy.ndarray
 
         Returns
         -------
         numpy.ndarray
 
         """
-        return get_weight_scalers(self.source_edge_scheme,
-                                         self.sink_edge_scheme,
-                                         self.internal_scheme, X,
-                                         half_internal_nodes,
-                                         n_internal_nodes)
+        X = X[:, 3]
+        return get_weight_scalers(self.source_edge_scheme, self.sink_edge_scheme,
+                                  self.internal_scheme, half_internal_nodes,
+                                  n_internal_nodes, X)
 
     def get_big_M_edges(self, half_internal_nodes):
         """

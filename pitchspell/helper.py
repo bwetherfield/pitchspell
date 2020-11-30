@@ -37,9 +37,9 @@ def generate_cost_func(accuracy, pre_calculated_weights, n_edges,
     return c
 
 
-def generate_capacities_def(pre_calculated_weights, X, big_M,
-                            edge_weights, n_edges,
-                            n_internal_nodes, n_nodes, weighted_adj):
+def generate_capacities_def(pre_calculated_weights, big_M, edge_weights, n_edges,
+                            n_internal_nodes, n_nodes, weighted_adj,
+                            pitch_classes):
     capacities_def = np.eye(n_edges, dtype=int)
     if pre_calculated_weights:
         # c_i,j = t(i,j) * w_(p(i), p(j))
@@ -49,8 +49,9 @@ def generate_capacities_def(pre_calculated_weights, X, big_M,
         ).flatten()
     else:
         # c_i,j - t(i,j) * w_(p(i), p(j)) = 0
-        pitch_class_indexing = X[:, 3] * 2 + np.indices((n_internal_nodes,),
-                                                        dtype='int') % 2
+        pitch_class_indexing = pitch_classes * 2 + np.indices(
+            (n_internal_nodes,), dtype='int'
+        ) % 2
         pc_idx_with_src_sink = np.append(pitch_class_indexing,
                                          [n_pitch_class_internal_nodes,
                                           n_pitch_class_internal_nodes + 1])
@@ -87,17 +88,16 @@ def generate_flow_conditions(internal_adj, n_edges,
     return flow_conditions, flow_conditions_rhs
 
 
-def get_weight_scalers(source_edge_scheme, sink_edge_scheme,
-                       internal_scheme, X, half_internal_nodes,
-                       n_internal_nodes):
+def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
+                       half_internal_nodes, n_internal_nodes, pitch_classes):
     idx = np.indices((half_internal_nodes,), dtype='int') * 2
-    source_edges = source_edge_scheme[X[:, 3]]
+    source_edges = source_edge_scheme[pitch_classes]
     source_edges[idx + 1] = 0
-    sink_edges = sink_edge_scheme[X[:, 3]]
+    sink_edges = sink_edge_scheme[pitch_classes]
     sink_edges[idx] = 0
     edge_weights = internal_scheme[
         tuple(
-            (X[:, 3] * 2 + np.indices((n_internal_nodes,), dtype='int')[
+            (pitch_classes * 2 + np.indices((n_internal_nodes,), dtype='int')[
                 0] % 2)[
                 np.indices((n_internal_nodes, n_internal_nodes), dtype='int')
             ]
