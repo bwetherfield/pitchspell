@@ -259,16 +259,24 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(flow_conditions,
                                       target_flow_conditions)
 
-    @pytest.mark.skip('not done yet')
     def test_get_weight_scalers(self):
-        helper.get_weight_scalers(
-            sink_edge_scheme=[],
-            internal_scheme=[],
-            half_internal_nodes=[],
-            n_internal_nodes=6,
-            pitch_classes=[],
+        weight_scalers = helper.get_weight_scalers(
+            source_edge_scheme=self.source_edge_scheme,
+            sink_edge_scheme=self.sink_edge_scheme,
+            internal_scheme=self.internal_scheme,
+            half_internal_nodes=2,
+            n_internal_nodes=4,
+            pitch_classes=np.array([0, 0, 1, 1]),
         )
-        assert False
+        target_weight_scalers = np.array([
+            [0, 0, 0, 2, 0, 0],
+            [0, 0, 1, 0, 0, 13],
+            [0, 1, 0, 0, 0, 0],
+            [2, 0, 0, 0, 0, 1],
+            [13, 0, 26, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+        ])
+        np.testing.assert_array_equal(weight_scalers, target_weight_scalers)
 
     @pytest.mark.skip(reason="not yet testing")
     def test_generate_internal_cut_constraints(self):

@@ -106,17 +106,24 @@ def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
     source_edges[idx + 1] = 0
     sink_edges = sink_edge_scheme[pitch_classes]
     sink_edges[idx] = 0
+    sink_edges = np.append(sink_edges, [0])
     edge_weights = internal_scheme[
         tuple(
-            (pitch_classes * 2 + np.indices((n_internal_nodes,), dtype=int)[
-                0] % 2)[
-                np.indices((n_internal_nodes, n_internal_nodes), dtype=int)
+            (pitch_classes * 2 + np.arange(n_internal_nodes) % 2)[
+                np.indices((n_internal_nodes, n_internal_nodes))
             ]
         )
     ]
+    edge_weights *= cut_2_by_2_diagonal(n_internal_nodes)
     edge_weights = add_node(edge_weights, out_edges=source_edges)
     edge_weights = add_node(edge_weights, in_edges=sink_edges)
     return edge_weights
+
+
+def cut_2_by_2_diagonal(n):
+    return np.logical_not(
+        f_inverse(lambda x: x // 2, (n, n), np.eye(n // 2, dtype=int))
+    ).astype(int)
 
 
 def generate_duality_constraint(cut, n_internal_nodes):
