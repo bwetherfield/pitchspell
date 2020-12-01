@@ -173,20 +173,39 @@ class TestHelperFunctions:
         )
         duality_target = np.array(
             [-1] * 4 + [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                       0,
-                       0, 0,
-                       0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] + [-1]
+                        0,
+                        0, 0,
+                        0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] + [-1]
         )
         np.testing.assert_array_equal(duality, duality_target)
         np.testing.assert_array_equal(duality_rhs, [0])
 
-    @pytest.mark.skip(reason="not yet testing")
+    @pytest.mark.xfail(reason='need to test function below')
     def test_generate_cut(self):
-        helper.generate_cut(
-            adj=[],
-            y=[]
+        cut = helper.generate_cut(
+            adj=np.array(
+                [
+                    [0, 0, 0, 1, 0, 0],
+                    [0, 0, 0, 0, 0, 1],
+                    [0, 1, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1],
+                    [1, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                ]
+            ),
+            y=[0, 0, 0, 1]
         )
-        assert False
+        target_cut = np.array(
+            [
+                [0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0]
+            ]
+        )
+        np.testing.assert_array_equal(cut, target_cut)
 
     @pytest.mark.skip(reason="not yet testing")
     def test_generate_flow_conditions(self):
