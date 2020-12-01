@@ -121,32 +121,101 @@ class TestHelperFunctions:
         target = 18 * [0] + [4] + 676 * [-1]
         np.testing.assert_array_equal(c, target)
 
-    def test_generate_capacities_def(self):
-        assert False
-
-    def test_generate_flow_conditions(self):
-        assert False
-
-    def test_get_weight_scalers(self):
+    def test_get_big_m_edges(self):
+        helper.get_big_M_edges(
+            half_internal_nodes=3,
+        )
         assert False
 
     def test_generate_duality_constraint(self):
-        assert False
-
-    def test_get_big_m_edges(self):
+        helper.generate_duality_constraint(
+            cut=[],
+            n_internal_nodes=4
+        )
         assert False
 
     def test_generate_cut(self):
+        helper.generate_cut(
+            adj=[],
+            y=[]
+        )
         assert False
+
+    def test_generate_flow_conditions(self):
+        helper.generate_flow_conditions(
+            internal_adj=[],
+            n_edges=36,
+            n_internal_nodes=4,
+            n_nodes=6,
+            square_idx=[]
+        )
+        assert False
+
+    def test_get_weight_scalers(self):
+        helper.get_weight_scalers(
+            sink_edge_scheme=[],
+            internal_scheme=[],
+            half_internal_nodes=[],
+            n_internal_nodes=6,
+            pitch_classes=[],
+        )
+        assert False
+
 
     def test_generate_internal_cut_constraints(self):
-        assert False
-
-    def test_generate_source_cut_constraints(self):
+        helper.generate_internal_cut_constraints(
+            adj=[],
+            n_edges=64,
+            internal_edges=36,
+            n_internal_nodes=6,
+            n_nodes=8
+        )
         assert False
 
     def test_generate_sink_cut_constraints(self):
+        helper.generate_sink_cut_constraints(
+            adj=[],
+            half_internal_nodes=[],
+            n_edges=36,
+            n_internal_nodes=4,
+            n_nodes=6
+        )
+        assert False
+
+    def test_generate_source_cut_constraints(self):
+        helper.generate_source_cut_constraints(
+            adj=[],
+            half_internal_nodes=2,
+            n_edges=36,
+            n_internal_nodes=4,
+            n_nodes=6
+        )
+        assert False
+
+    def test_generate_capacities_def(self):
+        helper.generate_capacities_def(
+            pre_calculated_weights=True,
+            big_M=[],
+            edge_weights=[],
+            n_edges=36,
+            n_internal_nodes=4,
+            n_nodes=6,
+            weighted_adj=[],
+            pitch_classes=[]
+        )
         assert False
 
     def test_extract_adjacencies(self):
+        helper.extract_adjacencies(
+            distance_cutoff=4,
+            distance_rolloff=0.4,
+            between_part_scalar=0.5,
+            chains=[],
+            ends=[],
+            events=[],
+            half_internal_nodes=2,
+            n_internal_nodes=4,
+            parts=[],
+            starts=[]
+        )
         assert False
