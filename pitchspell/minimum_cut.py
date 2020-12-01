@@ -2,7 +2,7 @@ import numpy as np
 
 def generate_complete_cut(arr):
     """
-    Return matrix that is 1 at (i,j) only if arr[i] == 1 and arr[0] == 0.
+    Return matrix that is 1 at (i,j) only if arr[i] == 0 and arr[j] == 1.
 
     Parameters
     ----------

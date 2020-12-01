@@ -5,7 +5,6 @@ from pitchspell.helper import generate_bounds, generate_weight_upper_bounds, \
     generate_cost_func
 from pitchspell import helper
 
-
 class TestHelperFunctions:
     internal_scheme = np.array([
         [0, 1, 0, 2, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 2, 1, 0, 1, 0, 1, 0],
