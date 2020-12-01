@@ -179,7 +179,6 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(duality, duality_target)
         np.testing.assert_array_equal(duality_rhs, [0])
 
-    @pytest.mark.xfail(reason='need to test function below')
     def test_generate_cut(self):
         cut = helper.generate_cut(
             adj=np.array(
@@ -197,9 +196,9 @@ class TestHelperFunctions:
         target_cut = np.array(
             [
                 [0, 0, 0, 1, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 1],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0, 0]
             ]
