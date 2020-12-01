@@ -137,10 +137,10 @@ def get_big_M_edges(half_internal_nodes):
             axis=1),
         2,
         axis=0)
-    big_M = adj_within
-    big_M[big_M == 1] = np.inf
-    big_M = add_node(big_M)
-    big_M = add_node(big_M)
+    adj_within = add_node(adj_within)
+    adj_within = add_node(adj_within)
+    big_M = np.array(adj_within, dtype=float)
+    big_M[np.isclose(big_M, 1)] = np.inf
     return adj_within, big_M
 
 

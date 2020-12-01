@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from pitchspell.helper import generate_bounds, generate_weight_upper_bounds, \
     generate_cost_func
@@ -122,11 +123,41 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(c, target)
 
     def test_get_big_m_edges(self):
-        helper.get_big_M_edges(
-            half_internal_nodes=3,
+        adj, big_M = helper.get_big_M_edges(
+            half_internal_nodes=4,
         )
-        assert False
+        target_array = np.array(
+            [
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ]
+        )
+        target_bigM_array = np.array(
+            [
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [np.inf, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, np.inf, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, np.inf, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, np.inf, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ]
+        )
+        np.testing.assert_array_equal(adj, target_array)
+        np.testing.assert_array_equal(big_M, target_bigM_array)
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_generate_duality_constraint(self):
         helper.generate_duality_constraint(
             cut=[],
@@ -134,6 +165,7 @@ class TestHelperFunctions:
         )
         assert False
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_generate_cut(self):
         helper.generate_cut(
             adj=[],
@@ -141,6 +173,7 @@ class TestHelperFunctions:
         )
         assert False
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_generate_flow_conditions(self):
         helper.generate_flow_conditions(
             internal_adj=[],
@@ -151,6 +184,7 @@ class TestHelperFunctions:
         )
         assert False
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_get_weight_scalers(self):
         helper.get_weight_scalers(
             sink_edge_scheme=[],
@@ -162,6 +196,7 @@ class TestHelperFunctions:
         assert False
 
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_generate_internal_cut_constraints(self):
         helper.generate_internal_cut_constraints(
             adj=[],
@@ -172,6 +207,7 @@ class TestHelperFunctions:
         )
         assert False
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_generate_sink_cut_constraints(self):
         helper.generate_sink_cut_constraints(
             adj=[],
@@ -182,6 +218,7 @@ class TestHelperFunctions:
         )
         assert False
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_generate_source_cut_constraints(self):
         helper.generate_source_cut_constraints(
             adj=[],
@@ -192,6 +229,7 @@ class TestHelperFunctions:
         )
         assert False
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_generate_capacities_def(self):
         helper.generate_capacities_def(
             pre_calculated_weights=True,
@@ -205,6 +243,7 @@ class TestHelperFunctions:
         )
         assert False
 
+    @pytest.mark.skip(reason="not yet testing")
     def test_extract_adjacencies(self):
         helper.extract_adjacencies(
             distance_cutoff=4,
