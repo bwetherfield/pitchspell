@@ -150,9 +150,8 @@ class ApproximateInverter(BaseEstimator):
         # ----------------------------------------
         # EQUALITY CONSTRAINTS
         # sum_(i=1)^n f_(i,k) - sum_(j=1)^n f_(k,j) = 0 for all k != s,t
-        square_idx = np.indices((n_internal_nodes, n_internal_nodes))
         flow_conditions, flow_conditions_rhs = self.generate_flow_conditions(
-            internal_adj, n_edges, n_internal_nodes, n_nodes, square_idx)
+            adj, n_internal_nodes, n_nodes)
 
         # sum_(i=1)^n f_s,i - sum_(e in cut) c_e = delta
         cut = self.generate_cut(adj, y)
@@ -399,11 +398,8 @@ class ApproximateInverter(BaseEstimator):
                 cut, n_internal_nodes)
         return duality_constraint, duality_constraint_rhs
 
-    def generate_flow_conditions(self, internal_adj, n_edges, n_internal_nodes,
-                                 n_nodes, square_idx):
-        return generate_flow_conditions(internal_adj, n_edges,
-                                               n_internal_nodes, n_nodes,
-                                               square_idx)
+    def generate_flow_conditions(self, adj, n_internal_nodes, n_nodes):
+        return generate_flow_conditions(adj, n_internal_nodes, n_nodes)
 
     def get_weight_scalers(self, half_internal_nodes, n_internal_nodes, X):
         """

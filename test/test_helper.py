@@ -5,6 +5,7 @@ from pitchspell.helper import generate_bounds, generate_weight_upper_bounds, \
     generate_cost_func
 from pitchspell import helper
 
+
 class TestHelperFunctions:
     internal_scheme = np.array([
         [0, 1, 0, 2, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 2, 1, 0, 1, 0, 1, 0],
@@ -205,18 +206,60 @@ class TestHelperFunctions:
         )
         np.testing.assert_array_equal(cut, target_cut)
 
-    @pytest.mark.skip(reason="not yet testing")
     def test_generate_flow_conditions(self):
-        helper.generate_flow_conditions(
-            internal_adj=[],
-            n_edges=36,
+        adj = np.array(
+            [
+                [0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 1],
+                [0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1],
+                [1, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0]
+            ]
+        )
+        flow_conditions, flow_conditions_rhs = helper.generate_flow_conditions(
+            adj=adj,
             n_internal_nodes=4,
             n_nodes=6,
-            square_idx=[]
         )
-        assert False
+        target_flow_conditions = np.concatenate(
+            [np.array([
+                [0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [-1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0]
+            ]).reshape(1, -1),
+             np.array([
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 1],
+                 [0, -1, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 0]
+             ]).reshape(1, -1),
+             np.array([
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 1, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 0, -1, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 0]
+             ]).reshape(1, -1),
+             np.array([
+                 [0, 0, 0, -1, 0, 0],
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 1],
+                 [0, 0, 0, 0, 0, 0],
+                 [0, 0, 0, 0, 0, 0]
+             ]).reshape(1, -1)
+             ], axis=0)
+        np.testing.assert_array_equal(flow_conditions,
+                                      target_flow_conditions)
 
-    @pytest.mark.skip(reason="not yet testing")
+    @pytest.mark.skip('not done yet')
     def test_get_weight_scalers(self):
         helper.get_weight_scalers(
             sink_edge_scheme=[],

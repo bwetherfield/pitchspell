@@ -83,15 +83,17 @@ def generate_capacities_def(pre_calculated_weights, big_M, edge_weights, n_edges
     return capacities_def, capacities_def_rhs
 
 
-def generate_flow_conditions(internal_adj, n_edges,
-                             n_internal_nodes, n_nodes, square_idx):
-    flow_conditions = np.zeros((n_internal_nodes, n_edges), dtype=int)
-    flow_conditions[
-        square_idx[0], (n_nodes) * square_idx[0] + square_idx[1]
-    ] = internal_adj[tuple(square_idx)]
-    flow_conditions[
-        square_idx[0], (n_nodes) * square_idx[1] + square_idx[0]
-    ] = -internal_adj[tuple(square_idx)]
+def generate_flow_conditions(adj, n_internal_nodes, n_nodes):
+    internal_nodes = np.arange(n_internal_nodes)
+
+    row_mask = np.zeros((n_internal_nodes, n_nodes, n_nodes), dtype=int)
+    row_mask[internal_nodes, internal_nodes] = 1
+
+    col_mask = np.zeros((n_internal_nodes, n_nodes, n_nodes), dtype=int)
+    col_mask[internal_nodes, :, internal_nodes] = 1
+
+    flow_conditions = (row_mask[:] - col_mask[:]) * adj
+    flow_conditions = flow_conditions.reshape(n_internal_nodes, -1)
     # RHS
     flow_conditions_rhs = np.zeros((n_internal_nodes), dtype=int)
     return flow_conditions, flow_conditions_rhs
