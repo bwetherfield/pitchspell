@@ -119,7 +119,7 @@ def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
 
 def generate_duality_constraint(cut, n_internal_nodes):
     duality_constraint = np.concatenate([
-        np.ones(n_internal_nodes, dtype=int), -cut.flatten(), [-1]
+        -np.ones(n_internal_nodes, dtype=int), cut.flatten(), [-1]
     ])
     # RHS
     duality_constraint_rhs = [0]

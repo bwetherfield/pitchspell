@@ -157,13 +157,28 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(adj, target_array)
         np.testing.assert_array_equal(big_M, target_bigM_array)
 
-    @pytest.mark.skip(reason="not yet testing")
     def test_generate_duality_constraint(self):
-        helper.generate_duality_constraint(
-            cut=[],
+        duality, duality_rhs = helper.generate_duality_constraint(
+            cut=np.array(
+                [
+                    [0, 0, 0, 1, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 1],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                ]
+            ),
             n_internal_nodes=4
         )
-        assert False
+        duality_target = np.array(
+            [-1] * 4 + [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                       0,
+                       0, 0,
+                       0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] + [-1]
+        )
+        np.testing.assert_array_equal(duality, duality_target)
+        np.testing.assert_array_equal(duality_rhs, [0])
 
     @pytest.mark.skip(reason="not yet testing")
     def test_generate_cut(self):
@@ -194,7 +209,6 @@ class TestHelperFunctions:
             pitch_classes=[],
         )
         assert False
-
 
     @pytest.mark.skip(reason="not yet testing")
     def test_generate_internal_cut_constraints(self):
