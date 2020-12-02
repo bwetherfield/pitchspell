@@ -160,11 +160,15 @@ def generate_cut(adj, y):
 
 
 def generate_internal_cut_constraints(adj, n_internal_nodes):
-    nonzero = adj[:-2, :-2].nonzero()
+    sel = (slice(None, -2), slice(None, -2))
+    bools = np.zeros_like(adj).astype(bool)
+    bools[sel] = True
+    bools *= (adj != 0)
+    nonzero = np.argwhere(bools).T
     count = nonzero[0].shape[0]
     edge_basis = np.zeros((count,) + adj.shape, dtype=int)
     edge_basis[np.arange(count), nonzero[0], nonzero[1]] = \
-        -adj[nonzero]
+        -adj[tuple(nonzero)]
     edge_indicators = edge_basis.reshape(edge_basis.shape[0], -1)
     internal_pairings = np.zeros((count, n_internal_nodes),
                                  dtype=int)
