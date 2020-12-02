@@ -278,16 +278,43 @@ class TestHelperFunctions:
         ])
         np.testing.assert_array_equal(weight_scalers, target_weight_scalers)
 
-    @pytest.mark.skip(reason="not yet testing")
     def test_generate_internal_cut_constraints(self):
-        helper.generate_internal_cut_constraints(
-            adj=[],
-            n_edges=64,
-            internal_edges=36,
-            n_internal_nodes=6,
-            n_nodes=8
+        constraints, rhs = helper.generate_internal_cut_constraints(
+            adj=np.array(
+                [
+                    [0, 0, 0, 1, 0, 0],
+                    [1, 0, 0, 0, 0, 1],
+                    [0, 1, 0, 0, 0, 0],
+                    [0, 0, 1, 0, 0, 1],
+                    [1, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                ]
+            ),
+            n_internal_nodes=4,
         )
-        assert False
+
+        target_constraints = np.concatenate(
+            [
+                np.append([-1, 0, 0, 1],
+                          [0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+                np.append([1, -1, 0, 0],
+                          [0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+                np.append([0, 1, -1, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+                np.append([0, 0, 1, -1],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+            ],
+            axis=0)
+        np.testing.assert_array_equal(constraints, target_constraints)
+        np.testing.assert_array_equal(rhs, np.zeros((4,), dtype=int))
 
     @pytest.mark.skip(reason="not yet testing")
     def test_generate_sink_cut_constraints(self):

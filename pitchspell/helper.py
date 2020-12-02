@@ -159,28 +159,19 @@ def generate_cut(adj, y):
     return cut
 
 
-def generate_internal_cut_constraints(adj, n_edges,
-                                      n_internal_edges,
-                                      n_internal_nodes, n_nodes):
-    internal_adj = adj[-2:, -2:]
-    sq_idx = np.indices((n_internal_nodes, n_internal_nodes))
-    internal_pairings = np.zeros(
-        (n_internal_edges, n_internal_nodes), dtype=int)
-    internal_pairings[
-        np.arange(n_internal_edges), sq_idx[0].flatten()] -= 1
-    internal_pairings[
-        np.arange(n_internal_edges), sq_idx[1].flatten()] += 1
-    edge_indicators = np.zeros(
-        (n_internal_edges, n_edges), dtype=int)
-    edge_indicators[
-        n_internal_nodes * sq_idx[0] + sq_idx[1],
-        (n_nodes) * sq_idx[0] + sq_idx[1]
-    ] = internal_adj[tuple(sq_idx)]
+def generate_internal_cut_constraints(adj, n_internal_nodes):
+    nonzero = adj[:-2, :-2].nonzero()
+    edge_basis = np.zeros(nonzero[0].shape + adj.shape, dtype=int)
+    edge_basis[np.arange(nonzero[0].shape[0]), nonzero[0], nonzero[1]] = \
+        -adj[nonzero]
+    edge_indicators = edge_basis.reshape(edge_basis.shape[0], -1)
+    internal_pairings = np.zeros((nonzero[0].shape[0], n_internal_nodes),
+                                 dtype=int)
+    internal_pairings[np.arange(nonzero[0].shape[0]), nonzero[0]] = -1
+    internal_pairings[np.arange(nonzero[0].shape[0]), nonzero[1]] = 1
     internal_constraints = np.concatenate([internal_pairings,
                                            edge_indicators], axis=1)
-    internal_constraints *= internal_adj.reshape(
-        (n_internal_edges, 1))
-    internal_constraints_rhs = np.zeros(n_internal_edges, dtype=int)
+    internal_constraints_rhs = np.zeros(nonzero[0].shape[0], dtype=int)
     return internal_constraints, internal_constraints_rhs
 
 
