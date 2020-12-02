@@ -287,8 +287,7 @@ class ApproximateInverter(BaseEstimator):
 
         # x_i - y_(s, i) <=0 for all i: (s,i) is an edge
         source_constraints, source_constraints_rhs = \
-            self.generate_source_cut_constraints(
-                adj, half_internal_nodes, n_edges, n_internal_nodes, n_nodes)
+            self.generate_source_cut_constraints(adj, n_internal_nodes)
 
         # - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
         sink_constraints, sink_constraints_rhs = \
@@ -447,11 +446,9 @@ class ApproximateInverter(BaseEstimator):
             generate_sink_cut_constraints(adj, n_internal_nodes)
         return sink_constraints, sink_constraints_rhs
 
-    def generate_source_cut_constraints(self, adj, half_internal_nodes, n_edges,
-                                        n_internal_nodes, n_nodes):
+    def generate_source_cut_constraints(self, adj, n_internal_nodes):
         source_constraints, source_constraints_rhs = \
-            generate_source_cut_constraints(
-                adj, half_internal_nodes, n_edges, n_internal_nodes, n_nodes)
+            generate_source_cut_constraints(adj, n_internal_nodes)
         return source_constraints, source_constraints_rhs
 
     def generate_internal_cut_constraints(self, adj, n_internal_nodes):
