@@ -316,26 +316,65 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(constraints, target_constraints)
         np.testing.assert_array_equal(rhs, np.zeros((4,), dtype=int))
 
-    @pytest.mark.skip(reason="not yet testing")
     def test_generate_sink_cut_constraints(self):
-        helper.generate_sink_cut_constraints(
-            adj=[],
-            half_internal_nodes=[],
-            n_edges=36,
+        constraints, rhs = helper.generate_sink_cut_constraints(
+            adj=np.array(
+                [
+                    [0, 0, 0, 1, 0, 0],
+                    [1, 0, 0, 0, 0, 1],
+                    [0, 1, 0, 0, 0, 0],
+                    [0, 0, 1, 0, 0, 1],
+                    [1, 0, 1, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                ]
+            ),
             n_internal_nodes=4,
-            n_nodes=6
         )
-        assert False
+        target_constraints = np.concatenate(
+            [
+                np.append([0, -1, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+                np.append([0, 0, 0, -1],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+            ],
+            axis=0)
+        target_rhs = np.array([-1, -1])
+        np.testing.assert_array_equal(constraints, target_constraints)
+        np.testing.assert_array_equal(rhs, target_rhs)
 
     @pytest.mark.skip(reason="not yet testing")
     def test_generate_source_cut_constraints(self):
-        helper.generate_source_cut_constraints(
+        constraints, rhs = helper.generate_source_cut_constraints(
             adj=[],
             half_internal_nodes=2,
             n_edges=36,
             n_internal_nodes=4,
             n_nodes=6
         )
+        target_constraints = np.concatenate(
+            [
+                np.append([-1, 0, 0, 1],
+                          [0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+                np.append([1, -1, 0, 0],
+                          [0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+                np.append([0, 1, -1, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0,
+                           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+                np.append([0, 0, 1, -1],
+                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                           0]).reshape(1, -1),
+            ],
+            axis=0)
         assert False
 
     @pytest.mark.skip(reason="not yet testing")

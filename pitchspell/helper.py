@@ -161,10 +161,11 @@ def generate_cut(adj, y):
 
 def generate_internal_cut_constraints(adj, n_internal_nodes):
     sel = (slice(None, -2), slice(None, -2))
-    return generate_cut_constraints(adj, n_internal_nodes, sel)
+    return generate_cut_constraints(adj, n_internal_nodes, sel, True, True)
 
 
-def generate_cut_constraints(adj, n_internal_nodes, sel):
+def generate_cut_constraints(adj, n_internal_nodes, sel, internal_sources,
+                             internal_dests):
     bools = np.zeros_like(adj).astype(bool)
     bools[sel] = True
     bools *= (adj != 0)
@@ -174,10 +175,13 @@ def generate_cut_constraints(adj, n_internal_nodes, sel):
     edge_basis[np.arange(count), nonzero[0], nonzero[1]] = -adj[tuple(nonzero)]
     edge_indicators = edge_basis.reshape(edge_basis.shape[0], -1)
     pairings = np.zeros((count, n_internal_nodes), dtype=int)
-    pairings[np.arange(count), nonzero[0]] = -1
-    pairings[np.arange(count), nonzero[1]] = 1
+    if internal_sources:
+        pairings[np.arange(count), nonzero[0]] = -1
+    if internal_dests:
+        pairings[np.arange(count), nonzero[1]] = 1
     constraints = np.concatenate([pairings, edge_indicators], axis=1)
-    rhs = np.zeros(count, dtype=int)
+    rhs = np.zeros(count, dtype=int) if internal_dests \
+        else -np.ones(count, dtype=int)
     return constraints, rhs
 
 
@@ -205,28 +209,10 @@ def generate_source_cut_constraints(adj, half_internal_nodes,
     return source_constraints, source_constraints_rhs
 
 
-def generate_sink_cut_constraints(adj, half_internal_nodes,
-                                  n_edges, n_internal_nodes, n_nodes):
-    sink_adj = adj[:, -1]
-    sink_pairings = np.zeros((half_internal_nodes, n_internal_nodes),
-                             dtype=int)
-    sink_pairings[np.arange(half_internal_nodes), np.arange(
-        half_internal_nodes) * 2 + 1] = -1
-    sink_edge_indicators = np.zeros(
-        (half_internal_nodes, n_edges), dtype=int)
-    sink_edge_indicators[
-        np.arange(half_internal_nodes),
-        (n_nodes) * (
-                np.arange(half_internal_nodes) * 2 + 1) + (
-                n_internal_nodes + 1)
-    ] = sink_adj[np.arange(half_internal_nodes) * 2 + 1]
-    sink_constraints = np.concatenate([sink_pairings,
-                                       sink_edge_indicators], axis=1)
-    sink_constraints *= sink_adj[
-        np.arange(half_internal_nodes) * 2 + 1
-        ].reshape((half_internal_nodes, 1))
-    sink_constraints_rhs = np.full((half_internal_nodes,), -1)
-    return sink_constraints, sink_constraints_rhs
+def generate_sink_cut_constraints(adj, n_internal_nodes):
+    sel = (slice(None), slice(-1, None))
+    return generate_cut_constraints(adj, n_internal_nodes, sel,
+                                    internal_sources=True, internal_dests=False)
 
 
 def extract_adjacencies(distance_cutoff, distance_rolloff,

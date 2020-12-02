@@ -444,8 +444,7 @@ class ApproximateInverter(BaseEstimator):
     def generate_sink_cut_constraints(self, adj, half_internal_nodes, n_edges,
                                       n_internal_nodes, n_nodes):
         sink_constraints, sink_constraints_rhs = \
-            generate_sink_cut_constraints(
-                adj, half_internal_nodes, n_edges, n_internal_nodes, n_nodes)
+            generate_sink_cut_constraints(adj, n_internal_nodes)
         return sink_constraints, sink_constraints_rhs
 
     def generate_source_cut_constraints(self, adj, half_internal_nodes, n_edges,
