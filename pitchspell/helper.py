@@ -161,23 +161,24 @@ def generate_cut(adj, y):
 
 def generate_internal_cut_constraints(adj, n_internal_nodes):
     sel = (slice(None, -2), slice(None, -2))
+    return generate_cut_constraints(adj, n_internal_nodes, sel)
+
+
+def generate_cut_constraints(adj, n_internal_nodes, sel):
     bools = np.zeros_like(adj).astype(bool)
     bools[sel] = True
     bools *= (adj != 0)
     nonzero = np.argwhere(bools).T
     count = nonzero[0].shape[0]
     edge_basis = np.zeros((count,) + adj.shape, dtype=int)
-    edge_basis[np.arange(count), nonzero[0], nonzero[1]] = \
-        -adj[tuple(nonzero)]
+    edge_basis[np.arange(count), nonzero[0], nonzero[1]] = -adj[tuple(nonzero)]
     edge_indicators = edge_basis.reshape(edge_basis.shape[0], -1)
-    internal_pairings = np.zeros((count, n_internal_nodes),
-                                 dtype=int)
-    internal_pairings[np.arange(count), nonzero[0]] = -1
-    internal_pairings[np.arange(count), nonzero[1]] = 1
-    internal_constraints = np.concatenate([internal_pairings,
-                                           edge_indicators], axis=1)
-    internal_constraints_rhs = np.zeros(count, dtype=int)
-    return internal_constraints, internal_constraints_rhs
+    pairings = np.zeros((count, n_internal_nodes), dtype=int)
+    pairings[np.arange(count), nonzero[0]] = -1
+    pairings[np.arange(count), nonzero[1]] = 1
+    constraints = np.concatenate([pairings, edge_indicators], axis=1)
+    rhs = np.zeros(count, dtype=int)
+    return constraints, rhs
 
 
 def generate_source_cut_constraints(adj, half_internal_nodes,
