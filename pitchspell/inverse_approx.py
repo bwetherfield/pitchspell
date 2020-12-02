@@ -283,15 +283,15 @@ class ApproximateInverter(BaseEstimator):
 
         # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
         internal_constraints, internal_constraints_rhs = \
-            self.generate_internal_cut_constraints(adj, n_internal_nodes)
+            generate_internal_cut_constraints(adj, n_internal_nodes)
 
         # x_i - y_(s, i) <=0 for all i: (s,i) is an edge
         source_constraints, source_constraints_rhs = \
-            self.generate_source_cut_constraints(adj, n_internal_nodes)
+            generate_source_cut_constraints(adj, n_internal_nodes)
 
         # - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
         sink_constraints, sink_constraints_rhs = \
-            self.generate_sink_cut_constraints(adj, n_internal_nodes)
+            generate_sink_cut_constraints(adj, n_internal_nodes)
 
         # x_i <= 1 bounds
         # x_i, y_ij >= 0 bounds (default)
@@ -341,8 +341,8 @@ class ApproximateInverter(BaseEstimator):
 
     def generate_cost_func(self, n_edges, n_variables):
         return generate_cost_func(self.accuracy,
-                                         self.pre_calculated_weights, n_edges,
-                                         n_variables)
+                                  self.pre_calculated_weights, n_edges,
+                                  n_variables)
 
     def generate_bounds(self, n_variables):
         return generate_bounds(self.pre_calculated_weights, self.internal_scheme,
@@ -438,16 +438,3 @@ class ApproximateInverter(BaseEstimator):
     def generate_cut(self, adj, y):
         cut = generate_cut(adj, y)
         return cut
-
-    def generate_sink_cut_constraints(self, adj, n_internal_nodes):
-        sink_constraints, sink_constraints_rhs = \
-            generate_sink_cut_constraints(adj, n_internal_nodes)
-        return sink_constraints, sink_constraints_rhs
-
-    def generate_source_cut_constraints(self, adj, n_internal_nodes):
-        source_constraints, source_constraints_rhs = \
-            generate_source_cut_constraints(adj, n_internal_nodes)
-        return source_constraints, source_constraints_rhs
-
-    def generate_internal_cut_constraints(self, adj, n_internal_nodes):
-        return generate_internal_cut_constraints(adj, n_internal_nodes)
