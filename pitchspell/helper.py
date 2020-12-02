@@ -161,17 +161,18 @@ def generate_cut(adj, y):
 
 def generate_internal_cut_constraints(adj, n_internal_nodes):
     nonzero = adj[:-2, :-2].nonzero()
-    edge_basis = np.zeros(nonzero[0].shape + adj.shape, dtype=int)
-    edge_basis[np.arange(nonzero[0].shape[0]), nonzero[0], nonzero[1]] = \
+    count = nonzero[0].shape[0]
+    edge_basis = np.zeros((count,) + adj.shape, dtype=int)
+    edge_basis[np.arange(count), nonzero[0], nonzero[1]] = \
         -adj[nonzero]
     edge_indicators = edge_basis.reshape(edge_basis.shape[0], -1)
-    internal_pairings = np.zeros((nonzero[0].shape[0], n_internal_nodes),
+    internal_pairings = np.zeros((count, n_internal_nodes),
                                  dtype=int)
-    internal_pairings[np.arange(nonzero[0].shape[0]), nonzero[0]] = -1
-    internal_pairings[np.arange(nonzero[0].shape[0]), nonzero[1]] = 1
+    internal_pairings[np.arange(count), nonzero[0]] = -1
+    internal_pairings[np.arange(count), nonzero[1]] = 1
     internal_constraints = np.concatenate([internal_pairings,
                                            edge_indicators], axis=1)
-    internal_constraints_rhs = np.zeros(nonzero[0].shape[0], dtype=int)
+    internal_constraints_rhs = np.zeros(count, dtype=int)
     return internal_constraints, internal_constraints_rhs
 
 
