@@ -406,3 +406,21 @@ class TestHelperFunctions:
         )
         print(weighted_adj)
         assert False
+
+    def test_generate_between_part_adj(self):
+        between_part_adj = helper.generate_between_part_adj(
+            starts=np.array([0, 1, 2, 4, 0, 3]),
+             ends=np.array([1, 3, 3, 5, 1, 5]),
+            parts=np.array([0, 0, 0, 0, 1, 1])
+        )
+        target_adj = np.array(
+            [
+                [0, 0, 0, 0, 1, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1],
+                [1, 0, 0, 0, 0, 0],
+                [0, 0, 0, 1, 0, 0],
+            ]
+        )
+        np.testing.assert_array_equal(between_part_adj, target_adj)
