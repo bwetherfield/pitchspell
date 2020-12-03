@@ -68,7 +68,7 @@ def add_node(arr, in_edges=None, out_edges=None):
 
     """
     out_edges = [0] if out_edges is None else np.append(out_edges, 0)
-    in_edges = [0] if in_edges is None else np.append(in_edges, [0, 0])
+    in_edges = [0] if in_edges is None else np.append(in_edges, 0)
     output = np.zeros(np.array(arr.shape) + 1, dtype=arr.dtype)
     output[:-1, :-1] = arr
     output[-1] = out_edges

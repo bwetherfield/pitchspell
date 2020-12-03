@@ -31,3 +31,111 @@ def test_hop_adjacencies():
         ]
     )
     np.testing.assert_array_equal(hop_adjacencies, target_hop_adjacencies)
+
+
+class TestAddNode:
+    def test_add_node_in_and_out(self):
+        arr = np.array(
+            [
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, 0]
+            ]
+        )
+        output = prepare_edges.add_node(arr, in_edges=arr[0], out_edges=arr[0])
+
+        target_arr = np.array(
+            [
+                [0, 1, 0, 0, 0],
+                [1, 0, 0, 0, 1],
+                [0, 0, 0, 1, 0],
+                [0, 0, 1, 0, 0],
+                [0, 1, 0, 0, 0]
+            ]
+        )
+        np.testing.assert_array_equal(output, target_arr)
+
+    def test_add_node_in_edges(self):
+        arr = np.array(
+            [
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, 0]
+            ]
+        )
+        output = prepare_edges.add_node(arr, in_edges=arr[0])
+
+        target_arr = np.array([
+            [0, 1, 0, 0, 0],
+            [1, 0, 0, 0, 1],
+            [0, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0]
+        ])
+        np.testing.assert_array_equal(output, target_arr)
+
+    def test_add_node_out_edges(self):
+        arr = np.array(
+            [
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, 0]
+            ]
+        )
+        output = prepare_edges.add_node(arr, out_edges=arr[0])
+
+        target_arr = np.array([
+            [0, 1, 0, 0, 0],
+            [1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0],
+            [0, 0, 1, 0, 0],
+            [0, 1, 0, 0, 0]
+        ])
+        np.testing.assert_array_equal(output, target_arr)
+
+    def test_add_node_out_then_in(self):
+        arr = np.array(
+            [
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, 0]
+            ]
+        )
+        output = prepare_edges.add_node(arr, out_edges=arr[0])
+        output = prepare_edges.add_node(output, in_edges=np.append(arr[0],0))
+
+        target_arr = np.array([
+            [0, 1, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 1],
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0]
+        ])
+        np.testing.assert_array_equal(output, target_arr)
+
+    def test_add_node_in_then_out(self):
+        arr = np.array(
+            [
+                [0, 1, 0, 0],
+                [1, 0, 0, 0],
+                [0, 0, 0, 1],
+                [0, 0, 1, 0]
+            ]
+        )
+        output = prepare_edges.add_node(arr, in_edges=arr[0])
+        output = prepare_edges.add_node(output, out_edges=np.append(arr[0],0))
+
+        target_arr = np.array([
+            [0, 1, 0, 0, 0, 0],
+            [1, 0, 0, 0, 1, 0],
+            [0, 0, 0, 1, 0, 0],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 0, 0, 0]
+        ])
+        np.testing.assert_array_equal(output, target_arr)
