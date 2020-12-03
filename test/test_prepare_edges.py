@@ -15,3 +15,19 @@ def test_concurrencies():
         ]
     )
     np.testing.assert_array_equal(concurrencies, target_concurrencies)
+
+
+def test_hop_adjacencies():
+    hop_adjacencies = prepare_edges.hop_adjacencies(2, 6)
+
+    target_hop_adjacencies = np.array(
+        [
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0],
+            [1, 0, 0, 0, 1, 0],
+            [0, 1, 0, 0, 0, 1],
+            [0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0]
+        ]
+    )
+    np.testing.assert_array_equal(hop_adjacencies, target_hop_adjacencies)
