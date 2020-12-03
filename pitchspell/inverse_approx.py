@@ -330,11 +330,13 @@ class ApproximateInverter(BaseEstimator):
         chains = X[:, 1]
         parts = X[:, 2]
         starts = X[:, 4]
-        ends = X[:, 5]
+        ends = X[:, 4] + X[:, 5]
+        timefactor = X[:, 6]
         adj, weighted_adj = extract_adjacencies(self.distance_cutoff,
                                                 self.distance_rolloff,
                                                 self.between_part_scalar,
                                                 chains, ends, events,
+                                                timefactor,
                                                 half_internal_nodes,
                                                 n_internal_nodes,
                                                 parts, starts)

@@ -196,7 +196,7 @@ def generate_sink_cut_constraints(adj, n_internal_nodes):
 
 
 def extract_adjacencies(distance_cutoff, distance_rolloff,
-                        between_part_scalar, chains, ends, events,
+                        between_part_scalar, chains, ends, events, timefactor,
                         half_internal_nodes, n_internal_nodes, parts,
                         starts):
     big_M_adj, big_M = get_big_M_edges(half_internal_nodes)
@@ -209,25 +209,26 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     between_part_adj = generate_between_part_adj(ends, parts, starts)
     # Add a scale factor according to position in the score - present in
     # the input matrix 'X'
-    timefactor = generate_timefactor(ends, n_internal_nodes)
+    endweighting = generate_endweighting(timefactor, n_internal_nodes)
     # Generate adjacency matrix
     adj = generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
                        within_chain_adjs)
     # Adjacency with relative weights based on proximity in score
     weighted_adj = generate_weighted_adj(between_part_adj, between_part_scalar,
-                                         distance_rolloff, adj,
-                                         timefactor, within_chain_adjs)
+                                         distance_rolloff, adj, endweighting,
+                                         within_chain_adjs)
     return big_M_adj, big_M, adj, weighted_adj
 
 
 def generate_weighted_adj(between_part_adj, between_part_scalar,
-                          distance_rolloff, adj, timefactor, within_chain_adjs):
+                          distance_rolloff, adj, endweighting,
+                          within_chain_adjs):
     weighted_adj = adj
     weighted_adj[:-2, :-2] = sum([
         pow(distance_rolloff, i) * chain for i, chain in
         enumerate(within_chain_adjs)
     ]) + between_part_scalar * between_part_adj
-    weighted_adj *= timefactor
+    weighted_adj *= endweighting
     return weighted_adj
 
 
@@ -287,9 +288,9 @@ def generate_within_parts_adj(chains, distance_cutoff, half_internal_nodes,
     return within_chain_adjs
 
 
-def generate_timefactor(ends, n_internal_nodes):
+def generate_endweighting(timefactor, n_internal_nodes):
     idx = np.indices((n_internal_nodes, n_internal_nodes), sparse=True)
-    timefactor = ends[idx[0]] * ends[idx[1]]
-    timefactor = add_node(timefactor, out_edges=ends)
-    timefactor = add_node(timefactor, in_edges=ends)
-    return timefactor
+    endweighting = timefactor[idx[0]] * timefactor[idx[1]]
+    endweighting = add_node(endweighting, out_edges=timefactor)
+    endweighting = add_node(endweighting, in_edges=np.append(timefactor, 0))
+    return endweighting

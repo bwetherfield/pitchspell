@@ -410,7 +410,7 @@ class TestHelperFunctions:
     def test_generate_between_part_adj(self):
         between_part_adj = helper.generate_between_part_adj(
             starts=np.array([0, 1, 2, 4, 0, 3]),
-             ends=np.array([1, 3, 3, 5, 1, 5]),
+            ends=np.array([1, 3, 3, 5, 1, 5]),
             parts=np.array([0, 0, 0, 0, 1, 1])
         )
         target_adj = np.array(
@@ -424,3 +424,18 @@ class TestHelperFunctions:
             ]
         )
         np.testing.assert_array_equal(between_part_adj, target_adj)
+
+    def test_generate_endweighting(self):
+        endweighting = helper.generate_endweighting(
+            timefactor=np.array([1.0, 1.5, 2.0, 2.5]),
+            n_internal_nodes=4
+        )
+
+        target_endweighting = np.array([
+            [1., 1.5, 2., 2.5, 0., 1.],
+            [1.5, 2.25, 3., 3.75, 0., 1.5],
+            [2., 3., 4., 5., 0., 2.],
+            [2.5, 3.75, 5., 6.25, 0., 2.5],
+            [1., 1.5, 2., 2.5, 0., 0.],
+            [0., 0., 0., 0., 0., 0.]])
+        np.testing.assert_array_almost_equal(endweighting, target_endweighting)
