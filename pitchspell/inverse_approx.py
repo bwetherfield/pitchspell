@@ -167,6 +167,7 @@ class ApproximateInverter(BaseEstimator):
             self.generate_capacities_def(big_M, edge_weights, n_edges,
                                          n_internal_nodes, n_nodes, weighted_adj,
                                          X)
+        capacities = np.eye(n_edges, dtype=int)
 
         # ----------------------------------------
         # INEQUALITY CONSTRAINTS

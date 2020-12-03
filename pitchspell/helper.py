@@ -46,29 +46,27 @@ def generate_cost_func(accuracy, pre_calculated_weights, n_edges, n_variables):
     return c
 
 
-def generate_capacities_def(pre_calculated_weights, big_M, edge_weights, n_edges,
+def generate_capacities_def(pre_calculated_weights, big_M, weight_scalers,
+                            n_edges,
                             n_internal_nodes, n_nodes, weighted_adj,
                             pitch_classes):
     capacities_def = np.eye(n_edges, dtype=int)
     if pre_calculated_weights:
-        # c_i,j = t(i,j) * w_(p(i), p(j))
+        # c_i,j = a(i,j) * w_(p(i), p(j))
         # RHS
-        capacities_def_rhs = (
-                weighted_adj * edge_weights + big_M
-        ).flatten()
+        capacities_def_rhs = (weighted_adj * weight_scalers + big_M).flatten()
     else:
-        # c_i,j - t(i,j) * w_(p(i), p(j)) = 0
-        pitch_class_indexing = pitch_classes * 2 + np.indices(
-            (n_internal_nodes,), dtype=int
-        ) % 2
-        pc_idx_with_src_sink = np.append(pitch_class_indexing,
+        # c_i,j - a(i,j) * w_(p(i), p(j)) = 0
+        pc_idx = pitch_classes * 2 + np.arange(n_internal_nodes) % 2
+        pc_idx_with_src_sink = np.append(pc_idx,
                                          [n_pitch_class_internal_nodes,
                                           n_pitch_class_internal_nodes + 1])
-        pc_edge_2d_idx = pc_idx_with_src_sink[
-            np.indices((n_nodes, n_nodes))]
+        pc_edge_2d_idx = pc_idx_with_src_sink[np.indices((n_nodes, n_nodes))]
         pc_edge_1d_idx = (
-                pc_edge_2d_idx[0] * n_pitch_class_nodes + pc_edge_2d_idx[
-            1]).flatten()
+                pc_edge_2d_idx[0] * n_pitch_class_nodes
+                + pc_edge_2d_idx[1]
+        ).flatten()
+
         pitch_based_capacity = np.zeros((n_edges, n_pitch_class_edges),
                                         dtype=int)
         pitch_based_capacity[
@@ -107,17 +105,17 @@ def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
     sink_edges = sink_edge_scheme[pitch_classes]
     sink_edges[idx] = 0
     sink_edges = np.append(sink_edges, [0])
-    edge_weights = internal_scheme[
+    weight_scalers = internal_scheme[
         tuple(
             (pitch_classes * 2 + np.arange(n_internal_nodes) % 2)[
                 np.indices((n_internal_nodes, n_internal_nodes))
             ]
         )
     ]
-    edge_weights *= cut_2_by_2_diagonal(n_internal_nodes)
-    edge_weights = add_node(edge_weights, out_edges=source_edges)
-    edge_weights = add_node(edge_weights, in_edges=sink_edges)
-    return edge_weights
+    weight_scalers *= cut_2_by_2_diagonal(n_internal_nodes)
+    weight_scalers = add_node(weight_scalers, out_edges=source_edges)
+    weight_scalers = add_node(weight_scalers, in_edges=sink_edges)
+    return weight_scalers
 
 
 def cut_2_by_2_diagonal(n):
@@ -201,31 +199,40 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
                         between_part_scalar, chains, ends, events,
                         half_internal_nodes, n_internal_nodes, parts,
                         starts):
-    n_events = events.max() + 1
-    part_adj = pullback(parts)
-    chain_adj = pullback(chains) * part_adj
-    not_part_adj = -part_adj
-    within_chain_adjs = list(map(
-        lambda arr: pullback(events) * chain_adj,
-        [hop_adjacencies(i, n_events) for i in range(distance_cutoff)]
-    ))
-    # Remove adjacency within the same note (between notes in the same
-    # event is fine)
-    within_chain_adjs[0] *= -f_inverse(
-        lambda x: x // 2, (n_internal_nodes, n_internal_nodes), np.eye(
-            half_internal_nodes, dtype=int)
-    )
+    big_M_adj, big_M = get_big_M_edges(half_internal_nodes)
+    within_chain_adjs = generate_within_parts_adj(chains, distance_cutoff,
+                                                  half_internal_nodes,
+                                                  events,
+                                                  n_internal_nodes,
+                                                  parts)
     # Connect concurrent notes in different parts
-    between_part_adj = concurrencies(
-        starts, ends
-    ) * not_part_adj
+    between_part_adj = generate_between_part_adj(ends, parts, starts)
     # Add a scale factor according to position in the score - present in
     # the input matrix 'X'
-    idx = np.indices((n_internal_nodes, n_internal_nodes), sparse=True)
-    timefactor = ends[idx[0]] * ends[idx[1]]
-    timefactor = add_node(timefactor, out_edges=ends)
-    timefactor = add_node(timefactor, in_edges=ends)
+    timefactor = generate_timefactor(ends, n_internal_nodes)
     # Generate adjacency matrix
+    adj = generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
+                       within_chain_adjs)
+    # Adjacency with relative weights based on proximity in score
+    weighted_adj = generate_weighted_adj(between_part_adj, between_part_scalar,
+                                         distance_rolloff, adj,
+                                         timefactor, within_chain_adjs)
+    return big_M_adj, big_M, adj, weighted_adj
+
+
+def generate_weighted_adj(between_part_adj, between_part_scalar,
+                          distance_rolloff, adj, timefactor, within_chain_adjs):
+    weighted_adj = adj
+    weighted_adj[:-2, :-2] = sum([
+        pow(distance_rolloff, i) * chain for i, chain in
+        enumerate(within_chain_adjs)
+    ]) + between_part_scalar * between_part_adj
+    weighted_adj *= timefactor
+    return weighted_adj
+
+
+def generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
+                 within_chain_adjs):
     source_adj = np.zeros((n_internal_nodes,), dtype=int)
     sink_adj = np.zeros((n_internal_nodes,), dtype=int)
     idx = np.indices((half_internal_nodes,), dtype=int) * 2
@@ -234,12 +241,55 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     adj = sum(within_chain_adjs) + between_part_adj
     adj = add_node(adj, out_edges=source_adj)
     adj = add_node(adj, in_edges=sink_adj)
-    # Adjacency with relative weights based on proximity in score
-    weighted_adj = sum([
-        pow(distance_rolloff, i) * adj for i, adj in
-        enumerate(within_chain_adjs)
-    ]) + between_part_scalar * between_part_adj
-    weighted_adj = add_node(weighted_adj, out_edges=source_adj)
-    weighted_adj = add_node(weighted_adj, in_edges=sink_adj)
-    weighted_adj *= timefactor
-    return adj, weighted_adj
+    return adj
+
+
+def generate_between_part_adj(ends, parts, starts):
+    part_adj = pullback(parts)
+    not_part_adj = np.logical_not(part_adj).astype(int)
+    between_part_adj = concurrencies(
+        starts, ends
+    ) * not_part_adj
+    return between_part_adj
+
+
+def generate_within_parts_adj(chains, distance_cutoff, half_internal_nodes,
+                              events, n_internal_nodes, parts):
+    """
+
+    Parameters
+    ----------
+    chains
+    distance_cutoff
+    half_internal_nodes
+    n_events
+    n_internal_nodes
+    parts
+
+    Returns
+    -------
+    list of arrays
+
+    """
+    n_events = events.max() + 1
+    part_adj = pullback(parts)
+    chain_adj = pullback(chains) * part_adj
+    within_chain_adjs = list(map(
+        lambda arr: pullback(events) * chain_adj,
+        [hop_adjacencies(i, n_events) for i in range(distance_cutoff)]
+    ))
+    # Remove adjacency within the same note (between notes in the same
+    # event is fine)
+    within_chain_adjs[0] *= np.logical_not(f_inverse(
+        lambda x: x // 2, (n_internal_nodes, n_internal_nodes), np.eye(
+            half_internal_nodes, dtype=int)
+    )).astype(int)
+    return within_chain_adjs
+
+
+def generate_timefactor(ends, n_internal_nodes):
+    idx = np.indices((n_internal_nodes, n_internal_nodes), sparse=True)
+    timefactor = ends[idx[0]] * ends[idx[1]]
+    timefactor = add_node(timefactor, out_edges=ends)
+    timefactor = add_node(timefactor, in_edges=ends)
+    return timefactor

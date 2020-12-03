@@ -381,7 +381,7 @@ class TestHelperFunctions:
         helper.generate_capacities_def(
             pre_calculated_weights=True,
             big_M=[],
-            edge_weights=[],
+            weight_scalers=[],
             n_edges=36,
             n_internal_nodes=4,
             n_nodes=6,
@@ -390,18 +390,19 @@ class TestHelperFunctions:
         )
         assert False
 
-    @pytest.mark.skip(reason="not yet testing")
+    @pytest.mark.xfail(reason="not yet fixed")
     def test_extract_adjacencies(self):
-        helper.extract_adjacencies(
+        big_M_adj, big_M, adj, weighted_adj = helper.extract_adjacencies(
             distance_cutoff=4,
             distance_rolloff=0.4,
             between_part_scalar=0.5,
-            chains=[],
-            ends=[],
-            events=[],
-            half_internal_nodes=2,
-            n_internal_nodes=4,
-            parts=[],
-            starts=[]
+            chains=np.array([0, 0, 0, 0, 1, 1]),
+            ends=np.array([1, 1, 3, 4, 5, 6]),
+            events=np.array([0, 0, 1, 2, 3, 4]),
+            half_internal_nodes=3,
+            n_internal_nodes=6,
+            parts=np.array([0, 0, 0, 0, 1, 1]),
+            starts=np.array([0, 0, 2, 3, 4, 5])
         )
+        print(weighted_adj)
         assert False
