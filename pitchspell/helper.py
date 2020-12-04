@@ -276,8 +276,8 @@ def generate_within_parts_adj(chains, distance_cutoff, half_internal_nodes,
     part_adj = pullback(parts)
     chain_adj = pullback(chains) * part_adj
     within_chain_adjs = list(map(
-        lambda arr: pullback(events) * chain_adj,
-        [hop_adjacencies(i, n_events) for i in range(distance_cutoff)]
+        lambda arr: pullback(events, arr) * chain_adj,
+        [hop_adjacencies(i, n_events) for i in range(distance_cutoff + 1)]
     ))
     # Remove adjacency within the same note (between notes in the same
     # event is fine)

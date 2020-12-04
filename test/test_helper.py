@@ -439,3 +439,30 @@ class TestHelperFunctions:
             [1., 1.5, 2., 2.5, 0., 0.],
             [0., 0., 0., 0., 0., 0.]])
         np.testing.assert_array_almost_equal(endweighting, target_endweighting)
+
+
+    @pytest.mark.skip('Implementation unfinished')
+    def test_generate_within_parts_adj(self):
+        within_parts_adj = helper.generate_within_parts_adj(
+            chains=np.array([0,0,1,1,2,2,2,2]),
+            distance_cutoff=1,
+            half_internal_nodes=4,
+            events=np.array([0,1,2,3,4,5,6,6]),
+            n_internal_nodes=8,
+            parts=np.array([0,0,0,0,1,1,1,1])
+        )
+
+        target_within_parts_adj_0 = np.array(
+            [
+                [1, 1, 1, 1, 0, 0, 0, 0],
+                [1, 1, 1, 1, 0, 0, 0, 0],
+                [1, 1, 1, 1, 0, 0, 0, 0],
+                [1, 1, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 1, 0, 0],
+                [0, 0, 0, 0, 1, 1, 1, 1],
+                [0, 0, 0, 0, 0, 1, 1, 1],
+                [0, 0, 0, 0, 0, 1, 1, 1]
+            ]
+        )
+        np.testing.assert_array_equal(within_parts_adj,
+                                      target_within_parts_adj_0)
