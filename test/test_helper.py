@@ -479,3 +479,14 @@ class TestHelperFunctions:
 
         np.testing.assert_array_equal(within_parts_adj[0], target[0])
         np.testing.assert_array_equal(within_parts_adj[1], target[1])
+
+
+def test_cut_2_by_2_diagonal():
+    no_diag = helper.cut_2_by_2_diagonal(4)
+    target_no_diag = np.array([
+        [0, 0, 1, 1],
+        [0, 0, 1, 1],
+        [1, 1, 0, 0],
+        [1, 1, 0, 0]
+    ])
+    np.testing.assert_array_equal(no_diag, target_no_diag)
