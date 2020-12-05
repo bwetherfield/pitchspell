@@ -480,6 +480,35 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(within_parts_adj[0], target[0])
         np.testing.assert_array_equal(within_parts_adj[1], target[1])
 
+    def test_get_big_m_edges(self):
+        big_M_adj, big_M = helper.get_big_M_edges(4)
+        target_big_M_adj = np.array([
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ])
+        target_big_M = np.array([
+            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            [np.inf, 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            [0., 0., np.inf, 0., 0., 0., 0., 0., 0., 0.],
+            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            [0., 0., 0., 0., np.inf, 0., 0., 0., 0., 0.],
+            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            [0., 0., 0., 0., 0., 0., np.inf, 0., 0., 0.],
+            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+        ])
+        np.testing.assert_array_equal(big_M_adj, target_big_M_adj)
+        np.testing.assert_array_equal(big_M, target_big_M)
+
 
 def test_cut_2_by_2_diagonal():
     no_diag = helper.cut_2_by_2_diagonal(4)
