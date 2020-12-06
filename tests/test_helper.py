@@ -476,7 +476,7 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(between_parts_adj, target_adj)
 
     def test_generate_endweighting_larger(self, timefactor):
-        endweighting = helper.generate_endweighting(timefactor, 10)
+        endweighting = helper.generate_endweighting(timefactor)
         target = np.array([
             [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 1.],
             [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 1.],
@@ -495,9 +495,7 @@ class TestHelperFunctions:
 
     def test_generate_endweighting(self):
         endweighting = helper.generate_endweighting(
-            timefactor=np.array([1.0, 1.5, 2.0, 2.5]),
-            n_internal_nodes=4
-        )
+            timefactor=np.array([1.0, 1.5, 2.0, 2.5]))
 
         target_endweighting = np.array([
             [1., 1.5, 2., 2.5, 0., 1.],

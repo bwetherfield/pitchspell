@@ -209,7 +209,7 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     between_part_adj = generate_between_parts_adj(ends, parts, starts)
     # Add a scale factor according to position in the score - present in
     # the input matrix 'X'
-    endweighting = generate_endweighting(timefactor, n_internal_nodes)
+    endweighting = generate_endweighting(timefactor)
     # Generate adjacency matrix
     adj = generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
                        within_chain_adjs)
@@ -289,9 +289,8 @@ def generate_within_part_adj(chains, distance_cutoff, half_internal_nodes,
     return within_chain_adjs
 
 
-def generate_endweighting(timefactor, n_internal_nodes):
-    idx = np.indices((n_internal_nodes, n_internal_nodes), sparse=True)
-    endweighting = timefactor[idx[0]] * timefactor[idx[1]]
+def generate_endweighting(timefactor):
+    endweighting = np.hstack(timefactor) * np.vstack(timefactor)
     endweighting = add_node(endweighting, out_edges=timefactor)
     endweighting = add_node(endweighting, in_edges=np.append(timefactor, 0))
     return endweighting
