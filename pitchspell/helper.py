@@ -223,12 +223,12 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
 def generate_weighted_adj(between_parts_adj, between_part_scalar,
                           distance_rolloff, adj, endweighting,
                           within_chain_adjs):
-    weighted_adj = adj
+    weighted_adj = adj.astype(float)
     weighted_adj[:-2, :-2] = sum([
         pow(distance_rolloff, i) * chain for i, chain in
         enumerate(within_chain_adjs)
     ]) + between_part_scalar * between_parts_adj
-    weighted_adj *= endweighting
+    weighted_adj = endweighting * weighted_adj
     return weighted_adj
 
 
