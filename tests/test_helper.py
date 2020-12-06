@@ -32,6 +32,11 @@ def ends():
 
 
 @pytest.fixture
+def timefactor():
+    return np.array([1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2])
+
+
+@pytest.fixture
 def within_part_adj(chains, events, parts):
     return helper.generate_within_part_adj(
         chains=chains,
@@ -469,6 +474,24 @@ class TestHelperFunctions:
             ]
         )
         np.testing.assert_array_equal(between_parts_adj, target_adj)
+
+    def test_generate_endweighting_larger(self, timefactor):
+        endweighting = helper.generate_endweighting(timefactor, 10)
+        target = np.array([
+            [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 1.],
+            [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 1.],
+            [1.1, 1.1, 1.21, 1.21, 1.1, 1.1, 1.1, 1.1, 1.32, 1.32, 0., 1.1],
+            [1.1, 1.1, 1.21, 1.21, 1.1, 1.1, 1.1, 1.1, 1.32, 1.32, 0., 1.1],
+            [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 1.],
+            [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 1.],
+            [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 1.],
+            [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 1.],
+            [1.2, 1.2, 1.32, 1.32, 1.2, 1.2, 1.2, 1.2, 1.44, 1.44, 0., 1.2],
+            [1.2, 1.2, 1.32, 1.32, 1.2, 1.2, 1.2, 1.2, 1.44, 1.44, 0., 1.2],
+            [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 0.],
+            [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+        ])
+        np.testing.assert_array_almost_equal(endweighting, target)
 
     def test_generate_endweighting(self):
         endweighting = helper.generate_endweighting(
