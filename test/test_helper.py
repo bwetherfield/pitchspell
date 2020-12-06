@@ -21,9 +21,9 @@ def within_part_adj():
 @pytest.fixture
 def between_parts_adj():
     return helper.generate_between_parts_adj(
-        starts=np.array([0, 1, 2, 4, 0, 3]),
-        ends=np.array([1, 3, 3, 5, 1, 5]),
-        parts=np.array([0, 0, 0, 0, 1, 1])
+        starts=np.array([0, 0, 1, 1, 0, 0, 0, 0, 3, 3]),
+        ends=np.array([1, 1, 4, 4, 1, 1, 1, 1, 4, 4]),
+        parts=np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1])
     )
 
 
@@ -431,12 +431,16 @@ class TestHelperFunctions:
     def test_generate_between_parts_adj(self, between_parts_adj):
         target_adj = np.array(
             [
-                [0, 0, 0, 0, 1, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 1],
-                [1, 0, 0, 0, 0, 0],
-                [0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+                [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+                [0, 0, 0, 0, 0, 0, 0, 0, 1, 1],
+                [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1, 1, 0, 0, 0, 0, 0, 0],
             ]
         )
         np.testing.assert_array_equal(between_parts_adj, target_adj)
@@ -516,15 +520,30 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(big_M_adj, target_big_M_adj)
         np.testing.assert_array_equal(big_M, target_big_M)
 
-    @pytest.mark.skip('incomplete')
-    def test_generate_adj(self):
+    def test_generate_adj(self, between_parts_adj, within_part_adj):
         adj = helper.generate_adj(
-            between_part_adj=[],
-            half_internal_nodes=4,
-            n_internal_nodes=8,
-            within_chain_adjs=[]
+            between_part_adj=between_parts_adj,
+            half_internal_nodes=5,
+            n_internal_nodes=10,
+            within_chain_adjs=within_part_adj
         )
-        assert False
+        target = np.array(
+            [
+                [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1],
+                [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1],
+                [1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+                [1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1],
+                [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
+                [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1],
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+                [0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1],
+                [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            ]
+        )
+        np.testing.assert_array_equal(adj, target)
 
 
 def test_cut_2_by_2_diagonal():

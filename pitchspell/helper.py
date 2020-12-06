@@ -239,6 +239,7 @@ def generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
     idx = np.indices((half_internal_nodes,), dtype=int) * 2
     source_adj[idx] = 1
     sink_adj[idx + 1] = 1
+    sink_adj = np.append(sink_adj, 0)
     adj = sum(within_chain_adjs) + between_part_adj
     adj = add_node(adj, out_edges=source_adj)
     adj = add_node(adj, in_edges=sink_adj)
