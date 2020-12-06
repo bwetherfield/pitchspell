@@ -6,6 +6,27 @@ from pitchspell.helper import generate_bounds, generate_weight_upper_bounds, \
 from pitchspell import helper
 
 
+@pytest.fixture
+def within_part_adj():
+    return helper.generate_within_part_adj(
+        chains=np.array([0, 0, 1, 1, 2, 2, 2, 2, 2, 2]),
+        distance_cutoff=1,
+        half_internal_nodes=5,
+        events=np.array([0, 0, 1, 1, 2, 2, 2, 2, 3, 3]),
+        n_internal_nodes=10,
+        parts=np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1])
+    )
+
+
+@pytest.fixture
+def between_parts_adj():
+    return helper.generate_between_parts_adj(
+        starts=np.array([0, 1, 2, 4, 0, 3]),
+        ends=np.array([1, 3, 3, 5, 1, 5]),
+        parts=np.array([0, 0, 0, 0, 1, 1])
+    )
+
+
 class TestHelperFunctions:
     internal_scheme = np.array([
         [0, 1, 0, 2, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 2, 1, 0, 1, 0, 1, 0],
@@ -407,12 +428,7 @@ class TestHelperFunctions:
         print(weighted_adj)
         assert False
 
-    def test_generate_between_part_adj(self):
-        between_part_adj = helper.generate_between_part_adj(
-            starts=np.array([0, 1, 2, 4, 0, 3]),
-            ends=np.array([1, 3, 3, 5, 1, 5]),
-            parts=np.array([0, 0, 0, 0, 1, 1])
-        )
+    def test_generate_between_parts_adj(self, between_parts_adj):
         target_adj = np.array(
             [
                 [0, 0, 0, 0, 1, 0],
@@ -423,7 +439,7 @@ class TestHelperFunctions:
                 [0, 0, 0, 1, 0, 0],
             ]
         )
-        np.testing.assert_array_equal(between_part_adj, target_adj)
+        np.testing.assert_array_equal(between_parts_adj, target_adj)
 
     def test_generate_endweighting(self):
         endweighting = helper.generate_endweighting(
@@ -440,16 +456,7 @@ class TestHelperFunctions:
             [0., 0., 0., 0., 0., 0.]])
         np.testing.assert_array_almost_equal(endweighting, target_endweighting)
 
-    def test_generate_within_parts_adj(self):
-        within_parts_adj = helper.generate_within_parts_adj(
-            chains=np.array([0, 0, 1, 1, 2, 2, 2, 2, 2, 2]),
-            distance_cutoff=1,
-            half_internal_nodes=5,
-            events=np.array([0, 0, 1, 1, 2, 2, 2, 2, 3, 3]),
-            n_internal_nodes=10,
-            parts=np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1])
-        )
-
+    def test_generate_within_parts_adj(self, within_part_adj):
         target = [
             np.array([
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -477,8 +484,8 @@ class TestHelperFunctions:
             ])
         ]
 
-        np.testing.assert_array_equal(within_parts_adj[0], target[0])
-        np.testing.assert_array_equal(within_parts_adj[1], target[1])
+        np.testing.assert_array_equal(within_part_adj[0], target[0])
+        np.testing.assert_array_equal(within_part_adj[1], target[1])
 
     def test_get_big_m_edges(self):
         big_M_adj, big_M = helper.get_big_M_edges(4)
@@ -508,6 +515,16 @@ class TestHelperFunctions:
         ])
         np.testing.assert_array_equal(big_M_adj, target_big_M_adj)
         np.testing.assert_array_equal(big_M, target_big_M)
+
+    @pytest.mark.skip('incomplete')
+    def test_generate_adj(self):
+        adj = helper.generate_adj(
+            between_part_adj=[],
+            half_internal_nodes=4,
+            n_internal_nodes=8,
+            within_chain_adjs=[]
+        )
+        assert False
 
 
 def test_cut_2_by_2_diagonal():

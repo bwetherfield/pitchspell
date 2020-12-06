@@ -200,13 +200,13 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
                         half_internal_nodes, n_internal_nodes, parts,
                         starts):
     big_M_adj, big_M = get_big_M_edges(half_internal_nodes)
-    within_chain_adjs = generate_within_parts_adj(chains, distance_cutoff,
-                                                  half_internal_nodes,
-                                                  events,
-                                                  n_internal_nodes,
-                                                  parts)
+    within_chain_adjs = generate_within_part_adj(chains, distance_cutoff,
+                                                 half_internal_nodes,
+                                                 events,
+                                                 n_internal_nodes,
+                                                 parts)
     # Connect concurrent notes in different parts
-    between_part_adj = generate_between_part_adj(ends, parts, starts)
+    between_part_adj = generate_between_parts_adj(ends, parts, starts)
     # Add a scale factor according to position in the score - present in
     # the input matrix 'X'
     endweighting = generate_endweighting(timefactor, n_internal_nodes)
@@ -245,17 +245,17 @@ def generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
     return adj
 
 
-def generate_between_part_adj(ends, parts, starts):
+def generate_between_parts_adj(ends, parts, starts):
     part_adj = pullback(parts)
     not_part_adj = np.logical_not(part_adj).astype(int)
-    between_part_adj = concurrencies(
+    between_parts_adj = concurrencies(
         starts, ends
     ) * not_part_adj
-    return between_part_adj
+    return between_parts_adj
 
 
-def generate_within_parts_adj(chains, distance_cutoff, half_internal_nodes,
-                              events, n_internal_nodes, parts):
+def generate_within_part_adj(chains, distance_cutoff, half_internal_nodes,
+                             events, n_internal_nodes, parts):
     """
 
     Parameters
