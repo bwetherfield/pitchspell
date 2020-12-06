@@ -41,8 +41,8 @@ test:
     - music21.ext.joblib.externals.cloudpickle
     - music21.ext.joblib.externals.loky
     - music21.ext.joblib.externals.loky.backend
-    - music21.ext.joblib.test
-    - music21.ext.joblib.test.data
+    - music21.ext.joblib.tests
+    - music21.ext.joblib.tests.data
     - music21.ext.jsonpickle
     - music21.ext.jsonpickle.ext
     - music21.ext.more_itertools
@@ -70,7 +70,7 @@ test:
     - music21.scale.scala.scl
     - music21.search
     - music21.stream
-    - music21.test
+    - music21.tests
     - music21.tree
     - music21.vexflow
 

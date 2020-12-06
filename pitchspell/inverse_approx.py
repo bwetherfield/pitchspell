@@ -126,7 +126,7 @@ class ApproximateInverter(BaseEstimator):
         """
         Constructs matrix inputs for scipy.optimize.linprog from `X` and `y`
         matrix data. Produces edge weight matrix in terms of pitch classes (
-        and additional binary index) for use with test data sets (and
+        and additional binary index) for use with tests data sets (and
         populating linear program matrices accordingly).
 
         Parameters
