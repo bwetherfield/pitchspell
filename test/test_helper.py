@@ -7,23 +7,48 @@ from pitchspell import helper
 
 
 @pytest.fixture
-def within_part_adj():
+def chains():
+    return np.array([0, 0, 1, 1, 2, 2, 2, 2, 2, 2])
+
+
+@pytest.fixture
+def events():
+    return np.array([0, 0, 1, 1, 2, 2, 2, 2, 3, 3])
+
+
+@pytest.fixture
+def parts():
+    return np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1])
+
+
+@pytest.fixture
+def starts():
+    return np.array([0, 0, 1, 1, 0, 0, 0, 0, 3, 3])
+
+
+@pytest.fixture
+def ends():
+    return np.array([1, 1, 4, 4, 1, 1, 1, 1, 4, 4])
+
+
+@pytest.fixture
+def within_part_adj(chains, events, parts):
     return helper.generate_within_part_adj(
-        chains=np.array([0, 0, 1, 1, 2, 2, 2, 2, 2, 2]),
+        chains=chains,
         distance_cutoff=1,
         half_internal_nodes=5,
-        events=np.array([0, 0, 1, 1, 2, 2, 2, 2, 3, 3]),
+        events=events,
         n_internal_nodes=10,
-        parts=np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1])
+        parts=parts
     )
 
 
 @pytest.fixture
-def between_parts_adj():
+def between_parts_adj(starts, ends, parts):
     return helper.generate_between_parts_adj(
-        starts=np.array([0, 0, 1, 1, 0, 0, 0, 0, 3, 3]),
-        ends=np.array([1, 1, 4, 4, 1, 1, 1, 1, 4, 4]),
-        parts=np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1])
+        starts=starts,
+        ends=ends,
+        parts=parts
     )
 
 
@@ -412,18 +437,18 @@ class TestHelperFunctions:
         assert False
 
     @pytest.mark.xfail(reason="not yet fixed")
-    def test_extract_adjacencies(self):
+    def test_extract_adjacencies(self, chains, ends, events, starts, parts):
         big_M_adj, big_M, adj, weighted_adj = helper.extract_adjacencies(
             distance_cutoff=4,
             distance_rolloff=0.4,
             between_part_scalar=0.5,
-            chains=np.array([0, 0, 0, 0, 1, 1]),
-            ends=np.array([1, 1, 3, 4, 5, 6]),
-            events=np.array([0, 0, 1, 2, 3, 4]),
+            chains=chains,
+            ends=ends,
+            events=events,
             half_internal_nodes=3,
             n_internal_nodes=6,
-            parts=np.array([0, 0, 0, 0, 1, 1]),
-            starts=np.array([0, 0, 2, 3, 4, 5])
+            parts=parts,
+            starts=starts
         )
         print(weighted_adj)
         assert False
