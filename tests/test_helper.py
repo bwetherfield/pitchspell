@@ -37,6 +37,11 @@ def timefactor():
 
 
 @pytest.fixture
+def endweighting(timefactor):
+    return helper.generate_endweighting(timefactor)
+
+
+@pytest.fixture
 def within_part_adj(chains, events, parts):
     return helper.generate_within_part_adj(
         chains=chains,
@@ -54,6 +59,16 @@ def between_parts_adj(starts, ends, parts):
         starts=starts,
         ends=ends,
         parts=parts
+    )
+
+
+@pytest.fixture
+def adj(within_part_adj, between_parts_adj):
+    return helper.generate_adj(
+        between_part_adj=between_parts_adj,
+        half_internal_nodes=5,
+        n_internal_nodes=10,
+        within_chain_adjs=within_part_adj
     )
 
 
@@ -442,7 +457,8 @@ class TestHelperFunctions:
         assert False
 
     @pytest.mark.xfail(reason="not yet fixed")
-    def test_extract_adjacencies(self, chains, ends, events, starts, parts):
+    def test_extract_adjacencies(self, chains, ends, events, starts, parts,
+                                 timefactor):
         big_M_adj, big_M, adj, weighted_adj = helper.extract_adjacencies(
             distance_cutoff=4,
             distance_rolloff=0.4,
@@ -450,6 +466,7 @@ class TestHelperFunctions:
             chains=chains,
             ends=ends,
             events=events,
+            timefactor=timefactor,
             half_internal_nodes=3,
             n_internal_nodes=6,
             parts=parts,
@@ -495,7 +512,8 @@ class TestHelperFunctions:
 
     def test_generate_endweighting(self):
         endweighting = helper.generate_endweighting(
-            timefactor=np.array([1.0, 1.5, 2.0, 2.5]))
+            timefactor=np.array([1.0, 1.5, 2.0, 2.5])
+        )
 
         target_endweighting = np.array([
             [1., 1.5, 2., 2.5, 0., 1.],
@@ -566,13 +584,7 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(big_M_adj, target_big_M_adj)
         np.testing.assert_array_equal(big_M, target_big_M)
 
-    def test_generate_adj(self, between_parts_adj, within_part_adj):
-        adj = helper.generate_adj(
-            between_part_adj=between_parts_adj,
-            half_internal_nodes=5,
-            n_internal_nodes=10,
-            within_chain_adjs=within_part_adj
-        )
+    def test_generate_adj(self, between_parts_adj, within_part_adj, adj):
         target = np.array(
             [
                 [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0],
@@ -590,6 +602,18 @@ class TestHelperFunctions:
             ]
         )
         np.testing.assert_array_equal(adj, target)
+
+    @pytest.mark.skip('yet to complete')
+    def test_generate_weighted_adj(self, between_parts_adj, within_part_adj,
+                                   adj):
+        weighted_adj = helper.generate_weighted_adj(
+            between_parts_adj=between_parts_adj,
+            between_part_scalar=0.5,
+            distance_rolloff=0.9,
+            adj=adj,
+            endweighting=[],
+            within_chain_adjs=within_part_adj
+        )
 
 
 def test_cut_2_by_2_diagonal():

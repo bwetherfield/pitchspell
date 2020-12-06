@@ -220,14 +220,14 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     return big_M_adj, big_M, adj, weighted_adj
 
 
-def generate_weighted_adj(between_part_adj, between_part_scalar,
+def generate_weighted_adj(between_parts_adj, between_part_scalar,
                           distance_rolloff, adj, endweighting,
                           within_chain_adjs):
     weighted_adj = adj
     weighted_adj[:-2, :-2] = sum([
         pow(distance_rolloff, i) * chain for i, chain in
         enumerate(within_chain_adjs)
-    ]) + between_part_scalar * between_part_adj
+    ]) + between_part_scalar * between_parts_adj
     weighted_adj *= endweighting
     return weighted_adj
 
