@@ -510,19 +510,33 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(constraints, target_constraints)
         np.testing.assert_array_equal(rhs, target_rhs)
 
-    @pytest.mark.skip(reason="not yet testing")
-    def test_generate_capacities_def(self):
-        helper.generate_capacities_def(
-            pre_calculated_weights=True,
-            big_M=[],
-            weight_scalers=[],
-            n_edges=144,
-            n_internal_nodes=10,
-            n_nodes=12,
-            weighted_adj=weighted_adj,
-            pitch_classes=[]
+    def test_generate_capacities_def_weights_variable(
+            self, weighted_adj, big_M_adjs, pitches
+    ):
+        capacities, rhs = helper.generate_capacities_def(
+            pre_calculated_weights=False,
+            big_M=big_M_adjs[1],
+            n_edges=144, n_internal_nodes=10,
+            n_nodes=12, weighted_adj=weighted_adj,
+            pitched_information=pitches)
+        N = len(pitches)
+        pitches_extended = np.append(pitches, [12, 12])
+        pitches_plus_parity = 2 * pitches_extended + (np.arange(12) % 2)
+        np.testing.assert_array_equal(
+            rhs.nonzero()[0], np.arange(len(pitches_extended),
+                                        144 - helper.n_pitch_class_nodes,
+                                        helper.n_pitch_class_nodes)
         )
-        assert False
+        locations = np.where(capacities[:, 144:])
+        weighted_nonzero = weighted_adj.nonzero()
+        np.testing.assert_array_almost_equal(
+            weighted_nonzero[0] * len(pitches_extended) +
+            weighted_nonzero[1], locations[0])
+        np.testing.assert_array_almost_equal(
+            pitches_plus_parity[weighted_nonzero[0]] * 26 +
+            pitches_plus_parity[weighted_nonzero[1]],
+            locations[1]
+        )
 
     @pytest.mark.xfail(reason="not yet fixed")
     def test_extract_adjacencies(self, chains, ends, events, starts, parts,

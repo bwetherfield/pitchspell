@@ -389,8 +389,8 @@ class ApproximateInverter(BaseEstimator):
                                 n_internal_nodes, n_nodes, weighted_adj, X):
         X = X[:, 3]
         return generate_capacities_def(self.pre_calculated_weights, big_M,
-                                       edge_weights, n_edges, n_internal_nodes,
-                                       n_nodes, weighted_adj, X)
+                                       n_edges, n_internal_nodes, n_nodes,
+                                       weighted_adj, edge_weights, X)
 
     def generate_duality_constraint(self, cut, n_internal_nodes):
         duality_constraint, duality_constraint_rhs = \

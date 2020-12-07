@@ -46,38 +46,58 @@ def generate_cost_func(accuracy, pre_calculated_weights, n_edges, n_variables):
     return c
 
 
-def generate_capacities_def(pre_calculated_weights, big_M, weight_scalers,
-                            n_edges,
+def generate_capacities_def(pre_calculated_weights, big_M, n_edges,
                             n_internal_nodes, n_nodes, weighted_adj,
-                            pitch_classes):
-    capacities_def = np.eye(n_edges, dtype=int)
+                            pitched_information):
     if pre_calculated_weights:
-        # c_i,j = a(i,j) * w_(p(i), p(j))
-        # RHS
-        capacities_def_rhs = (weighted_adj * weight_scalers + big_M).flatten()
+        weight_scalers = pitched_information
+        capacities_def, capacities_def_rhs = \
+            generate_capacities_def_weights_fixed(big_M, n_edges, weighted_adj,
+                                                  weight_scalers)
     else:
-        # c_i,j - a(i,j) * w_(p(i), p(j)) = 0
-        pc_idx = pitch_classes * 2 + np.arange(n_internal_nodes) % 2
-        pc_idx_with_src_sink = np.append(pc_idx,
-                                         [n_pitch_class_internal_nodes,
-                                          n_pitch_class_internal_nodes + 1])
-        pc_edge_2d_idx = pc_idx_with_src_sink[np.indices((n_nodes, n_nodes))]
-        pc_edge_1d_idx = (
-                pc_edge_2d_idx[0] * n_pitch_class_nodes
-                + pc_edge_2d_idx[1]
-        ).flatten()
+        pitch_classes = pitched_information
+        capacities_def, capacities_def_rhs = \
+            generate_capacities_def_weights_variable(
+                big_M, n_edges, n_internal_nodes, n_nodes, pitch_classes,
+                weighted_adj)
+    return capacities_def, capacities_def_rhs
 
-        pitch_based_capacity = np.zeros((n_edges, n_pitch_class_edges),
-                                        dtype=int)
-        pitch_based_capacity[
-            np.indices((n_edges,)),
-            pc_edge_1d_idx
-        ] = weighted_adj.flatten()
-        capacities_def = np.concatenate([
-            capacities_def, -pitch_based_capacity
-        ], axis=1)
-        # RHS
-        capacities_def_rhs = big_M.flatten()
+
+def generate_capacities_def_weights_variable(big_M, n_edges, n_internal_nodes,
+                                             n_nodes, pitch_classes,
+                                             weighted_adj):
+    # c_i,j - a(i,j) * w_(p(i), p(j)) = 0
+    capacities_def = np.eye(n_edges, dtype=float)
+    pc_idx = pitch_classes * 2 + np.arange(n_internal_nodes) % 2
+    source_pitch_class_index = n_pitch_class_internal_nodes
+    sink_pitch_class_index = n_pitch_class_internal_nodes + 1
+    pc_idx_with_src_sink = np.append(pc_idx, [source_pitch_class_index,
+                                              sink_pitch_class_index])
+    pc_edge_2d_idx = pc_idx_with_src_sink[np.indices((n_nodes, n_nodes))]
+    pc_edge_1d_idx = (
+            pc_edge_2d_idx[0] * n_pitch_class_nodes
+            + pc_edge_2d_idx[1]
+    ).flatten()
+    pitch_based_capacity = np.zeros((n_edges, n_pitch_class_edges),
+                                    dtype=float)
+    pitch_based_capacity[
+        np.arange(n_edges),
+        pc_edge_1d_idx
+    ] = weighted_adj.flatten()
+    capacities_def = np.concatenate([
+        capacities_def, -pitch_based_capacity
+    ], axis=1)
+    # RHS
+    capacities_def_rhs = big_M.flatten()
+    return capacities_def, capacities_def_rhs
+
+
+def generate_capacities_def_weights_fixed(big_M, n_edges, weighted_adj,
+                                          weight_scalers):
+    # c_i,j = a(i,j) * w_(p(i), p(j))
+    capacities_def = np.eye(n_edges, dtype=float)
+    # RHS
+    capacities_def_rhs = (weighted_adj * weight_scalers + big_M).flatten()
     return capacities_def, capacities_def_rhs
 
 
