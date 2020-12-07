@@ -538,6 +538,22 @@ class TestHelperFunctions:
             locations[1]
         )
 
+    def test_generate_capacities_def_weights_variable(
+            self, weighted_adj, big_M_adjs, pitches, weight_scalers
+    ):
+        capacities, rhs = helper.generate_capacities_def(
+            pre_calculated_weights=True,
+            big_M=big_M_adjs[1],
+            n_edges=144, n_internal_nodes=10,
+            n_nodes=12, weighted_adj=weighted_adj,
+            pitched_information=weight_scalers)
+        np.testing.assert_array_almost_equal(capacities, np.eye(144,
+                                                                dtype=float))
+        np.testing.assert_array_almost_equal(
+            rhs, ((weighted_adj * weight_scalers) + big_M_adjs[1]).flatten()
+        )
+        assert rhs[12] == np.inf
+
     @pytest.mark.xfail(reason="not yet fixed")
     def test_extract_adjacencies(self, chains, ends, events, starts, parts,
                                  timefactor):
