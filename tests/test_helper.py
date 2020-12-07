@@ -7,6 +7,46 @@ from pitchspell import helper
 
 
 @pytest.fixture
+def internal_scheme():
+    return np.array([
+        [0, 1, 0, 2, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 2, 1, 0, 1, 0, 1, 0],
+        [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0, 1, 0, 1, 0, 1],
+        [0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0],
+        [2, 0, 1, 0, 0, 1, 3, 0, 0, 1, 2, 0, 0, 1, 0, 0, 0, 1, 0, 1, 3, 0, 0, 1],
+        [1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
+        [0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 3, 1, 0, 0, 1, 0, 2, 1, 0, 0, 3, 1, 0, 0, 2, 0, 0, 1, 0, 0, 2],
+        [0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 2, 0, 0, 0, 0, 1, 1, 0],
+        [0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0],
+        [1, 0, 0, 1, 0, 1, 2, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1],
+        [1, 0, 0, 2, 1, 0, 1, 0, 0, 1, 0, 1, 0, 2, 1, 0, 0, 2, 1, 0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 2, 0, 0, 1, 0, 1, 0, 0],
+        [0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0],
+        [0, 0, 0, 1, 0, 1, 3, 0, 0, 1, 2, 0, 1, 0, 0, 1, 0, 1, 0, 1, 3, 0, 0, 1],
+        [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 2, 1, 0, 1, 0, 1, 0],
+        [0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 2, 0, 0, 1, 0, 1, 0, 1],
+        [0, 2, 1, 0, 0, 0, 0, 2, 1, 0, 0, 2, 1, 0, 0, 2, 0, 1, 1, 0, 0, 3, 1, 0],
+        [2, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2, 0, 0, 1, 2, 0, 1, 0, 0, 1, 3, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0],
+        [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1],
+        [1, 0, 0, 3, 1, 0, 1, 0, 0, 0, 1, 0, 0, 3, 1, 0, 0, 3, 1, 0, 0, 1, 0, 2],
+        [0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 3, 0, 0, 1, 1, 0, 1, 0],
+        [1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1],
+        [0, 1, 0, 1, 0, 1, 2, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 2, 0, 1, 0]
+    ])
+
+
+@pytest.fixture
+def source_edge_scheme():
+    return np.array((13, 26, 3, 1, 13, 13, 26, 3, 0, 3, 1, 13))
+
+
+@pytest.fixture
+def sink_edge_scheme():
+    return np.array((13, 1, 3, 26, 13, 13, 1, 3, 0, 3, 26, 13))
+
+
+@pytest.fixture
 def chains():
     return np.array([0, 0, 1, 1, 2, 2, 2, 2, 2, 2])
 
@@ -14,6 +54,24 @@ def chains():
 @pytest.fixture
 def events():
     return np.array([0, 0, 1, 1, 2, 2, 2, 2, 3, 3])
+
+
+@pytest.fixture
+def pitches():
+    return np.array([0, 0, 1, 1, 0, 0, 1, 1, 0, 0])
+
+
+@pytest.fixture
+def weight_scalers(internal_scheme, source_edge_scheme, sink_edge_scheme,
+                   pitches):
+    return helper.get_weight_scalers(
+        source_edge_scheme=source_edge_scheme,
+        sink_edge_scheme=sink_edge_scheme,
+        internal_scheme=internal_scheme,
+        half_internal_nodes=5,
+        n_internal_nodes=10,
+        pitch_classes=pitches
+    )
 
 
 @pytest.fixture
@@ -83,36 +141,13 @@ def weighted_adj(between_parts_adj, adj, endweighting, within_part_adj):
         within_chain_adjs=within_part_adj
     )
 
-class TestHelperFunctions:
-    internal_scheme = np.array([
-        [0, 1, 0, 2, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 2, 1, 0, 1, 0, 1, 0],
-        [1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 2, 0, 0, 1, 0, 1, 0, 1],
-        [0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0],
-        [2, 0, 1, 0, 0, 1, 3, 0, 0, 1, 2, 0, 0, 1, 0, 0, 0, 1, 0, 1, 3, 0, 0, 1],
-        [1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0],
-        [0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
-        [1, 0, 0, 3, 1, 0, 0, 1, 0, 2, 1, 0, 0, 3, 1, 0, 0, 2, 0, 0, 1, 0, 0, 2],
-        [0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 2, 0, 0, 0, 0, 1, 1, 0],
-        [0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0],
-        [1, 0, 0, 1, 0, 1, 2, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1],
-        [1, 0, 0, 2, 1, 0, 1, 0, 0, 1, 0, 1, 0, 2, 1, 0, 0, 2, 1, 0, 1, 0, 0, 0],
-        [0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 2, 0, 0, 1, 0, 1, 0, 0],
-        [0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0],
-        [0, 0, 0, 1, 0, 1, 3, 0, 0, 1, 2, 0, 1, 0, 0, 1, 0, 1, 0, 1, 3, 0, 0, 1],
-        [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 2, 1, 0, 1, 0, 1, 0],
-        [0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 2, 0, 0, 1, 0, 1, 0, 1],
-        [0, 2, 1, 0, 0, 0, 0, 2, 1, 0, 0, 2, 1, 0, 0, 2, 0, 1, 1, 0, 0, 3, 1, 0],
-        [2, 0, 0, 1, 0, 0, 2, 0, 0, 1, 2, 0, 0, 1, 2, 0, 1, 0, 0, 1, 3, 0, 0, 1],
-        [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0],
-        [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1],
-        [1, 0, 0, 3, 1, 0, 1, 0, 0, 0, 1, 0, 0, 3, 1, 0, 0, 3, 1, 0, 0, 1, 0, 2],
-        [0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0, 1, 3, 0, 0, 1, 1, 0, 1, 0],
-        [1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1],
-        [0, 1, 0, 1, 0, 1, 2, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 2, 0, 1, 0]
-    ])
 
-    source_edge_scheme = np.array((13, 26, 3, 1, 13, 13, 26, 3, 0, 3, 1, 13))
-    sink_edge_scheme = np.array((13, 1, 3, 26, 13, 13, 1, 3, 0, 3, 26, 13))
+@pytest.fixture
+def big_M_adjs():
+    return helper.get_big_M_edges(5)
+
+
+class TestHelperFunctions:
     target = np.array(
         [[0, 26, 0, 26, 26, 0, 26, 0, 0, 26, 26, 0, 0, 0, 26, 0,
           0, 26, 26, 0, 26, 0, 26, 0, 0, 0],
@@ -167,23 +202,27 @@ class TestHelperFunctions:
          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
 
-    def test_generate_bounds_weights_fixed(self):
-        bounds = generate_bounds(True, self.internal_scheme,
-                                 self.source_edge_scheme,
-                                 self.sink_edge_scheme, 676)
+    def test_generate_bounds_weights_fixed(self, internal_scheme,
+                                           source_edge_scheme, sink_edge_scheme):
+        bounds = generate_bounds(True, internal_scheme,
+                                 source_edge_scheme,
+                                 sink_edge_scheme, 676)
         assert bounds == (0, None)
 
-    def test_generate_weight_upper_bounds(self):
-        upper_bounds = generate_weight_upper_bounds(self.internal_scheme,
-                                                    self.sink_edge_scheme,
-                                                    self.source_edge_scheme)
+    def test_generate_weight_upper_bounds(self, internal_scheme,
+                                          source_edge_scheme, sink_edge_scheme):
+        upper_bounds = generate_weight_upper_bounds(internal_scheme,
+                                                    sink_edge_scheme,
+                                                    source_edge_scheme)
 
         np.testing.assert_array_equal(upper_bounds, self.target)
 
-    def test_generate_bounds_weights_variable(self):
-        bounds = generate_bounds(False, self.internal_scheme,
-                                 self.source_edge_scheme,
-                                 self.sink_edge_scheme, 677)
+    def test_generate_bounds_weights_variable(self, internal_scheme,
+                                              source_edge_scheme,
+                                              sink_edge_scheme):
+        bounds = generate_bounds(False, internal_scheme,
+                                 source_edge_scheme,
+                                 sink_edge_scheme, 677)
         bound_target = [(0, None)] + list(
             zip(np.zeros_like(self.target).flatten(), self.target.flatten())
         )
@@ -336,11 +375,12 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(flow_conditions,
                                       target_flow_conditions)
 
-    def test_get_weight_scalers(self):
+    def test_get_weight_scalers(self, internal_scheme, source_edge_scheme,
+                                sink_edge_scheme):
         weight_scalers = helper.get_weight_scalers(
-            source_edge_scheme=self.source_edge_scheme,
-            sink_edge_scheme=self.sink_edge_scheme,
-            internal_scheme=self.internal_scheme,
+            source_edge_scheme=source_edge_scheme,
+            sink_edge_scheme=sink_edge_scheme,
+            internal_scheme=internal_scheme,
             half_internal_nodes=2,
             n_internal_nodes=4,
             pitch_classes=np.array([0, 0, 1, 1]),
@@ -352,6 +392,23 @@ class TestHelperFunctions:
             [2, 0, 0, 0, 0, 1],
             [13, 0, 26, 0, 0, 0],
             [0, 0, 0, 0, 0, 0]
+        ])
+        np.testing.assert_array_equal(weight_scalers, target_weight_scalers)
+
+    def test_get_weight_scalers_larger(self, pitches, weight_scalers):
+        target_weight_scalers = np.array([
+            [0, 0, 0, 2, 0, 1, 0, 2, 0, 1, 0, 0],
+            [0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 13],
+            [0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0],
+            [2, 0, 0, 0, 2, 0, 1, 0, 2, 0, 0, 1],
+            [0, 1, 0, 2, 0, 0, 0, 2, 0, 1, 0, 0],
+            [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 13],
+            [0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0],
+            [2, 0, 1, 0, 2, 0, 0, 0, 2, 0, 0, 1],
+            [0, 1, 0, 2, 0, 1, 0, 2, 0, 0, 0, 0],
+            [1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 13],
+            [13, 0, 26, 0, 13, 0, 26, 0, 13, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
         ])
         np.testing.assert_array_equal(weight_scalers, target_weight_scalers)
 
@@ -459,10 +516,10 @@ class TestHelperFunctions:
             pre_calculated_weights=True,
             big_M=[],
             weight_scalers=[],
-            n_edges=36,
-            n_internal_nodes=4,
-            n_nodes=6,
-            weighted_adj=[],
+            n_edges=144,
+            n_internal_nodes=10,
+            n_nodes=12,
+            weighted_adj=weighted_adj,
             pitch_classes=[]
         )
         assert False
@@ -471,15 +528,15 @@ class TestHelperFunctions:
     def test_extract_adjacencies(self, chains, ends, events, starts, parts,
                                  timefactor):
         big_M_adj, big_M, adj, weighted_adj = helper.extract_adjacencies(
-            distance_cutoff=4,
-            distance_rolloff=0.4,
+            distance_cutoff=1,
+            distance_rolloff=0.9,
             between_part_scalar=0.5,
             chains=chains,
             ends=ends,
             events=events,
             timefactor=timefactor,
-            half_internal_nodes=3,
-            n_internal_nodes=6,
+            half_internal_nodes=5,
+            n_internal_nodes=10,
             parts=parts,
             starts=starts
         )
