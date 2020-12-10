@@ -20,9 +20,9 @@ def generate_bounds(pre_calculated_weights, internal_scheme, source_edge_scheme,
     Parameters
     ----------
     pre_calculated_weights: bool
-    internal_scheme: array
-    source_edge_scheme: array
-    sink_edge_scheme: array
+    internal_scheme: ndarray
+    source_edge_scheme: ndarray
+    sink_edge_scheme: ndarray
     n_variables: int
 
     Returns
@@ -51,13 +51,13 @@ def generate_weight_upper_bounds(internal_scheme, sink_edge_scheme,
 
     Parameters
     ----------
-    internal_scheme: array
-    sink_edge_scheme: array
-    source_edge_scheme: array
+    internal_scheme: ndarray
+    sink_edge_scheme: ndarray
+    source_edge_scheme: ndarray
 
     Returns
     -------
-    array
+    ndarray
 
     """
     pc_scheme = internal_scheme
@@ -88,7 +88,7 @@ def generate_cost_func(accuracy, pre_calculated_weights, n_edges, n_variables):
 
     Returns
     -------
-    (1D) array
+    ndarray (1D)
 
     """
     c = np.zeros((n_variables), dtype=int)
@@ -109,16 +109,16 @@ def generate_capacities_def(pre_calculated_weights, big_M, n_edges,
     Parameters
     ----------
     pre_calculated_weights: bool
-    big_M: array
+    big_M: ndarray
     n_edges: int
     n_internal_nodes: int
     n_nodes: int
-    weighted_adj: array
-    pitched_information: array
+    weighted_adj: ndarray
+    pitched_information: ndarray
 
     Returns
     -------
-    array (2D), array (1D)
+    ndarray (2D), ndarray (1D)
 
     """
     if pre_calculated_weights:
@@ -142,23 +142,23 @@ def generate_capacities_def_weights_variable(big_M, n_edges, n_internal_nodes,
     Generate constraints of the form
 
         c_i,j - a(i,j) * w_(p(i), p(j)) = 0
-
+\\
     where a(i,j) indicates adjacency between i and j in the graph and p(i)
     denotes the pitch value associated with the node i. Generates constraint
     coefficients and RHS separately.
 
     Parameters
     ----------
-    big_M: array
+    big_M: ndarray
     n_edges: int
     n_internal_nodes: int
     n_nodes: int
-    pitch_classes: array
-    weighted_adj: array
+    pitch_classes: ndarray
+    weighted_adj: ndarray
 
     Returns
     -------
-    array (2D), array (1d)
+    ndarray (2D), ndarray (1d)
 
     """
     capacities_def = np.eye(n_edges, dtype=float)
@@ -191,22 +191,22 @@ def generate_capacities_def_weights_fixed(big_M, n_edges, weighted_adj,
     """
     Generate constraints of the form
 
-        c_i,j = a(i,j) * w_(p(i), p(j))
-
+        c_{i,j} = a(i,j) * w_{(p(i), p(j))}
+\\
     where a(i,j) indicates adjacency between i and j in the graph and p(i)
     denotes the pitch value associated with the node i. Generates constraint
     coefficients and RHS separately.
 
     Parameters
     ----------
-    big_M: array
+    big_M: ndarray
     n_edges: int
-    weighted_adj: array
-    weight_scalers: array
+    weighted_adj: ndarray
+    weight_scalers: ndarray
 
     Returns
     -------
-    tuple(array (2D), array (1D))
+    tuple(ndarray (2D), ndarray (1D))
 
     """
     # c_i,j = a(i,j) * w_(p(i), p(j))
@@ -221,18 +221,18 @@ def generate_flow_conditions(adj, n_internal_nodes, n_nodes):
     Generate conditions of the form
 
         sum_(i=1)^n f_(i,k) - sum_(j=1)^n f_(k,j) = 0 for all k != s,t
-
+\\
     specifying that the flow into each internal node equals the flow out of it.
 
     Parameters
     ----------
-    adj: array
+    adj: ndarray
     n_internal_nodes: int
     n_nodes: int
 
     Returns
     -------
-    array (2D), array (1D)
+    ndarray (2D), ndarray (1D)
 
     """
     internal_nodes = np.arange(n_internal_nodes)
@@ -257,16 +257,16 @@ def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
 
     Parameters
     ----------
-    source_edge_scheme: array
-    sink_edge_scheme: array
-    internal_scheme: array
+    source_edge_scheme: ndarray
+    sink_edge_scheme: ndarray
+    internal_scheme: ndarray
     half_internal_nodes: int
     n_internal_nodes: int
-    pitch_classes: array
+    pitch_classes: ndarray
 
     Returns
     -------
-    array
+    ndarray
 
     """
     idx = np.indices((half_internal_nodes,), dtype=int) * 2
@@ -298,7 +298,7 @@ def cut_2_by_2_diagonal(n):
 
     Returns
     -------
-    array
+    ndarray
 
     """
     return np.logical_not(
@@ -311,18 +311,18 @@ def generate_duality_constraint(cut, n_internal_nodes):
     Generate constraint of the form
 
         sum_(i=1)^n f_s,i - sum_(e in cut) c_e = delta
-
+\\
     which defines the "duality gap" between flow and cut values. Generates
     constraint coefficients and RHS separately.
 
     Parameters
     ----------
-    cut: array
+    cut: ndarray
     n_internal_nodes: int
 
     Returns
     -------
-    array (2D), array (1D)
+    ndarray (2D), ndarray (1D)
 
     """
     duality_constraint = np.concatenate([
@@ -345,7 +345,7 @@ def get_big_M_edges(half_internal_nodes):
 
     Returns
     -------
-    array
+    ndarray
 
     """
     adj_within = np.tile(
@@ -371,12 +371,12 @@ def extract_cut(adj, y):
 
     Parameters
     ----------
-    adj: array (2D)
-    y: array (1D)
+    adj: ndarray (2D)
+    y: ndarray (1D)
 
     Returns
     -------
-    array
+    ndarray
 
     """
     y_plus_source_sink = np.concatenate([y, [0, 1]])
@@ -392,12 +392,12 @@ def generate_internal_cut_constraints(adj, n_internal_nodes):
 
     Parameters
     ----------
-    adj: array
+    adj: ndarray
     n_internal_nodes: int
 
     Returns
     -------
-    array
+    ndarray
 
     """
     sel = (slice(None, -2), slice(None, -2))
@@ -410,12 +410,14 @@ def generate_cut_constraints(adj, n_internal_nodes, sel, internal_sources,
     Generate a general cut constraint of e.g. one of the following forms
 
         x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
+
         x_i - y_(s, i) <=0 for all i: (s,i) is an edge
-        - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
+
+        \- x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
 
     Parameters
     ----------
-    adj: array
+    adj: ndarray
     n_internal_nodes: int
     sel: tuple[slice, slice]
     internal_sources: bool
@@ -423,7 +425,7 @@ def generate_cut_constraints(adj, n_internal_nodes, sel, internal_sources,
 
     Returns
     -------
-    array
+    ndarray
 
     """
     bools = np.zeros_like(adj).astype(bool)
@@ -450,17 +452,17 @@ def generate_source_cut_constraints(adj, n_internal_nodes):
     Generate cut constraints of the form
 
         x_i - y_(s, i) <=0 for all i: (s,i) is an edge
-
+\\
     for edges from the source node.
 
     Parameters
     ----------
-    adj: array
+    adj: ndarray
     n_internal_nodes: int
 
     Returns
     -------
-    array
+    ndarray
 
     """
     sel = (slice(-2, None), slice(None))
@@ -473,17 +475,17 @@ def generate_sink_cut_constraints(adj, n_internal_nodes):
     Generate cut constraints of the form
 
         - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
-
+\\
     for edges that go towards the sink edge.
 
     Parameters
     ----------
-    adj: array
+    adj: ndarray
     n_internal_nodes: int
 
     Returns
     -------
-    array
+    ndarray
 
     """
     sel = (slice(None), slice(-1, None))
@@ -503,18 +505,18 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     distance_cutoff: int
     distance_rolloff: float in (0,1]
     between_part_scalar: float
-    chains: (1D) array of length `n_internal_nodes`
-    ends: (1D) array of length `n_internal_nodes`
-    events: (1D) array of length `n_internal_nodes`
-    timefactor: (1D) array of length `n_internal_nodes`
+    chains: ndarray (1D) of length `n_internal_nodes`
+    ends: ndarray (1D) of length `n_internal_nodes`
+    events: ndarray (1D) of length `n_internal_nodes`
+    timefactor: ndarray (1D) of length `n_internal_nodes`
     half_internal_nodes: int
     n_internal_nodes: int
-    parts: (1D) array of length `n_internal_nodes`
-    starts: (1D) array of length `n_internal_nodes`
+    parts: ndarray (1D) of length `n_internal_nodes`
+    starts: ndarray (1D) of length `n_internal_nodes`
 
     Returns
     -------
-    array, array
+    ndarray, ndarray
 
     """
     within_chain_adjs = generate_within_part_adj(chains, distance_cutoff,
@@ -546,16 +548,16 @@ def generate_weighted_adj(between_parts_adj, between_part_scalar,
 
     Parameters
     ----------
-    between_parts_adj: array
+    between_parts_adj: ndarray
     between_part_scalar: float
     distance_rolloff: float in (0,1]
-    adj: array
-    endweighting: array
-    within_chain_adjs: array
+    adj: ndarray
+    endweighting: ndarray
+    within_chain_adjs: ndarray
 
     Returns
     -------
-    array
+    ndarray
     """
     weighted_adj = adj.astype(float)
     weighted_adj[:-2, :-2] = sum([
@@ -574,14 +576,14 @@ def generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
 
     Parameters
     ----------
-    between_part_adj: array
+    between_part_adj: ndarray
     half_internal_nodes: int
     n_internal_nodes: int
-    within_chain_adjs: array
+    within_chain_adjs: ndarray
 
     Returns
     -------
-    array
+    ndarray
 
     """
     source_adj = np.zeros((n_internal_nodes,), dtype=int)
@@ -603,13 +605,13 @@ def generate_between_parts_adj(ends, parts, starts):
 
     Parameters
     ----------
-    ends: array
-    parts: array
-    starts: array
+    ends: ndarray
+    parts: ndarray
+    starts: ndarray
 
     Returns
     -------
-    array
+    ndarray
 
     """
     part_adj = pullback(parts)
@@ -629,16 +631,16 @@ def generate_within_part_adj(chains, distance_cutoff, half_internal_nodes,
 
     Parameters
     ----------
-    chains: array
+    chains: ndarray
     distance_cutoff: int
     half_internal_nodes: int
     n_events: int
     n_internal_nodes: int
-    parts: array
+    parts: ndarray
 
     Returns
     -------
-    list[array]
+    list[ndarray]
 
     """
     n_events = events.max() + 1
@@ -664,11 +666,11 @@ def generate_endweighting(timefactor):
 
     Parameters
     ----------
-    timefactor: (1D) array
+    timefactor: ndarray (1D)
 
     Returns
     -------
-    array (2D)
+    ndarray (2D)
 
     """
     endweighting = np.hstack(timefactor) * np.vstack(timefactor)
