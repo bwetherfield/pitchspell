@@ -272,7 +272,6 @@ class ApproximateInverter(BaseEstimator):
         implicit square of variables s, and t
         """
         n_internal_nodes = X.shape[0]
-        n_internal_edges = pow(n_internal_nodes, 2)
         n_nodes = n_internal_nodes + 2
         n_edges = pow(n_nodes, 2)
         half_internal_nodes = n_internal_nodes // 2
