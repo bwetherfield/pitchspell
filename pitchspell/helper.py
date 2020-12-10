@@ -219,7 +219,6 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
                         between_part_scalar, chains, ends, events, timefactor,
                         half_internal_nodes, n_internal_nodes, parts,
                         starts):
-    big_M_adj, big_M = get_big_M_edges(half_internal_nodes)
     within_chain_adjs = generate_within_part_adj(chains, distance_cutoff,
                                                  half_internal_nodes,
                                                  events,
@@ -237,7 +236,7 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     weighted_adj = generate_weighted_adj(between_part_adj, between_part_scalar,
                                          distance_rolloff, adj, endweighting,
                                          within_chain_adjs)
-    return big_M_adj, big_M, adj, weighted_adj
+    return adj, weighted_adj
 
 
 def generate_weighted_adj(between_parts_adj, between_part_scalar,
