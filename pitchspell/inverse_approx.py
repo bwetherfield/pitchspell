@@ -3,13 +3,14 @@ import numpy as np
 from scipy.optimize import linprog
 
 from pitchspell.helper import generate_bounds, generate_cost_func, \
-    generate_capacities_def, generate_flow_conditions, \
+    generate_flow_conditions, \
     get_weight_scalers, generate_duality_constraint, \
     get_big_M_edges, extract_cut, \
     generate_internal_cut_constraints, \
     generate_source_cut_constraints, generate_sink_cut_constraints, \
     extract_adjacencies, n_pitch_classes, n_pitch_class_internal_nodes, \
     n_pitch_class_nodes, n_pitch_class_edges
+from pitchspell import helper
 from pitchspell.pullback import pad
 
 
@@ -150,24 +151,40 @@ class ApproximateInverter(BaseEstimator):
         # ----------------------------------------
         # EQUALITY CONSTRAINTS
         # sum_(i=1)^n f_(i,k) - sum_(j=1)^n f_(k,j) = 0 for all k != s,t
-        flow_conditions, flow_conditions_rhs = self.generate_flow_conditions(
-            adj, n_internal_nodes, n_nodes)
+        flow_conditions, flow_conditions_rhs = generate_flow_conditions(adj,
+                                                                        n_internal_nodes,
+                                                                        n_nodes)
 
         # sum_(i=1)^n f_s,i - sum_(e in cut) c_e = delta
-        cut = self.generate_cut(adj, y)
-        duality_constraint, duality_constraint_rhs = \
-            self.generate_duality_constraint(
+        cut = extract_cut(adj, y)
+        constraint, rhs = \
+            generate_duality_constraint(
                 cut, n_internal_nodes)
+        result = constraint, rhs
+        duality_constraint, duality_constraint_rhs = \
+            result
 
         # Capacity variable definitions
-        big_M_adj, big_M = self.get_big_M_edges(half_internal_nodes)
-        edge_weights = self.get_weight_scalers(half_internal_nodes,
-                                               n_internal_nodes, X)
-        capacities_def, capacities_def_rhs = \
-            self.generate_capacities_def(big_M, edge_weights, n_edges,
-                                         n_internal_nodes, n_nodes, weighted_adj,
-                                         X)
-        capacities = np.eye(n_edges, dtype=int)
+        big_M_adj, big_M = get_big_M_edges(half_internal_nodes)
+        pitch_classes = X[:, 3]
+        if self.pre_calculated_weights:
+            weight_scalers = get_weight_scalers(self.source_edge_scheme,
+                                                self.sink_edge_scheme,
+                                                self.internal_scheme,
+                                                half_internal_nodes,
+                                                n_internal_nodes, pitch_classes)
+            capacities_def, capacities_def_rhs = \
+                helper.generate_capacities_def_weights_fixed(big_M, n_edges,
+                                                             weighted_adj,
+                                                             weight_scalers)
+        else:
+            capacities_def, capacities_def_rhs = \
+                helper.generate_capacities_def_weights_variable(
+                    big_M,
+                    n_edges,
+                    n_internal_nodes, n_nodes, pitch_classes,
+                    weighted_adj
+                )
 
         # ----------------------------------------
         # INEQUALITY CONSTRAINTS
@@ -213,7 +230,9 @@ class ApproximateInverter(BaseEstimator):
 
         # ----------------------------------------
         # SET UP LINEAR PROGRAM
-        c = self.generate_cost_func(n_edges, n_variables)
+        c = generate_cost_func(self.accuracy,
+                               self.pre_calculated_weights, n_edges,
+                               n_variables)
         A_eq = np.concatenate([
             flow_conditions_spaced,
             duality_constraint_spaced,
@@ -226,7 +245,10 @@ class ApproximateInverter(BaseEstimator):
         ])
         A_ub = capacity_conditions_spaced
         b_ub = capacity_conditions_rhs
-        bounds = self.generate_bounds(n_variables)
+        bounds = generate_bounds(self.pre_calculated_weights,
+                                 self.internal_scheme,
+                                 self.source_edge_scheme, self.sink_edge_scheme,
+                                 n_variables)
 
         output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
                           bounds=bounds)
@@ -277,9 +299,13 @@ class ApproximateInverter(BaseEstimator):
         half_internal_nodes = n_internal_nodes // 2
         adj, weighted_adj = self.extract_adjacencies(half_internal_nodes,
                                                      n_internal_nodes, X)
-        edge_weights = self.get_weight_scalers(half_internal_nodes,
-                                               n_internal_nodes, X)
-        big_M_adj, big_M = self.get_big_M_edges(half_internal_nodes)
+        pitch_classes = X[:, 3]
+        weight_scalers = get_weight_scalers(self.source_edge_scheme,
+                                            self.sink_edge_scheme,
+                                            self.internal_scheme,
+                                            half_internal_nodes,
+                                            n_internal_nodes, pitch_classes)
+        big_M_adj, big_M = get_big_M_edges(half_internal_nodes)
 
         # x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
         internal_constraints, internal_constraints_rhs = \
@@ -297,7 +323,7 @@ class ApproximateInverter(BaseEstimator):
         # x_i, y_ij >= 0 bounds (default)
         bounds = [(0, 1)] * n_internal_nodes + [(0, n_internal_nodes)] * n_edges
 
-        capacities = (weighted_adj * edge_weights + big_M).flatten()
+        capacities = (weighted_adj * weight_scalers + big_M).flatten()
         c = np.append([np.zeros(n_internal_nodes, dtype=int), capacities])
         A_ub = np.concatenate([
             internal_constraints,
@@ -330,26 +356,16 @@ class ApproximateInverter(BaseEstimator):
         parts = X[:, 2]
         starts = X[:, 4]
         ends = X[:, 4] + X[:, 5]
-        timefactor = X[:, 6]
+        time_factor = X[:, 6]
         adj, weighted_adj = extract_adjacencies(self.distance_cutoff,
                                                 self.distance_rolloff,
                                                 self.between_part_scalar,
                                                 chains, ends, events,
-                                                timefactor,
+                                                time_factor,
                                                 half_internal_nodes,
                                                 n_internal_nodes,
                                                 parts, starts)
         return adj, weighted_adj
-
-    def generate_cost_func(self, n_edges, n_variables):
-        return generate_cost_func(self.accuracy,
-                                  self.pre_calculated_weights, n_edges,
-                                  n_variables)
-
-    def generate_bounds(self, n_variables):
-        return generate_bounds(self.pre_calculated_weights, self.internal_scheme,
-                               self.source_edge_scheme, self.sink_edge_scheme,
-                               n_variables)
 
     def space_capacities_def(self, capacities_def, n_edges, n_variables):
         if self.pre_calculated_weights:
@@ -383,60 +399,3 @@ class ApproximateInverter(BaseEstimator):
                 capacity_definition_spaced_idx
             )
         return capacities_def_spaced
-
-    def generate_capacities_def(self, big_M, edge_weights, n_edges,
-                                n_internal_nodes, n_nodes, weighted_adj, X):
-        X = X[:, 3]
-        return generate_capacities_def(self.pre_calculated_weights, big_M,
-                                       n_edges, n_internal_nodes, n_nodes,
-                                       weighted_adj, edge_weights, X)
-
-    def generate_duality_constraint(self, cut, n_internal_nodes):
-        duality_constraint, duality_constraint_rhs = \
-            generate_duality_constraint(
-                cut, n_internal_nodes)
-        return duality_constraint, duality_constraint_rhs
-
-    def generate_flow_conditions(self, adj, n_internal_nodes, n_nodes):
-        return generate_flow_conditions(adj, n_internal_nodes, n_nodes)
-
-    def get_weight_scalers(self, half_internal_nodes, n_internal_nodes, X):
-        """
-        Get weight scalers based on the pitches of the notes in the dataset X.
-
-        Parameters
-        ----------
-        X
-        n_internal_nodes: int
-
-        Returns
-        -------
-        array
-
-        """
-        X = X[:, 3]
-        return get_weight_scalers(self.source_edge_scheme, self.sink_edge_scheme,
-                                  self.internal_scheme, half_internal_nodes,
-                                  n_internal_nodes, X)
-
-    def get_big_M_edges(self, half_internal_nodes):
-        """
-        Output the "big M" component graph which connects the up node and the
-        down node corresponding to a single note in the musical score by a
-        directed infinite weight edge.
-
-        Parameters
-        ----------
-        n_internal_nodes: int
-
-        Returns
-        -------
-        array, array
-
-        """
-
-        return get_big_M_edges(half_internal_nodes)
-
-    def generate_cut(self, adj, y):
-        cut = extract_cut(adj, y)
-        return cut
