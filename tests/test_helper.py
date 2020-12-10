@@ -529,10 +529,10 @@ class TestHelperFunctions:
         )
         locations = np.where(capacities[:, 144:])
         weighted_nonzero = weighted_adj.nonzero()
-        np.testing.assert_array_almost_equal(
+        np.testing.assert_allclose(
             weighted_nonzero[0] * len(pitches_extended) +
             weighted_nonzero[1], locations[0])
-        np.testing.assert_array_almost_equal(
+        np.testing.assert_allclose(
             pitches_plus_parity[weighted_nonzero[0]] * 26 +
             pitches_plus_parity[weighted_nonzero[1]],
             locations[1]
@@ -547,9 +547,9 @@ class TestHelperFunctions:
             n_edges=144, n_internal_nodes=10,
             n_nodes=12, weighted_adj=weighted_adj,
             pitched_information=weight_scalers)
-        np.testing.assert_array_almost_equal(capacities, np.eye(144,
+        np.testing.assert_allclose(capacities, np.eye(144,
                                                                 dtype=float))
-        np.testing.assert_array_almost_equal(
+        np.testing.assert_allclose(
             rhs, ((weighted_adj * weight_scalers) + big_M_adjs[1]).flatten()
         )
         assert rhs[12] == np.inf
@@ -570,10 +570,10 @@ class TestHelperFunctions:
             parts=parts,
             starts=starts
         )
-        np.testing.assert_array_almost_equal(test_big_M, big_M_adjs[1])
-        np.testing.assert_array_almost_equal(test_big_M_adj, big_M_adjs[0])
-        np.testing.assert_array_almost_equal(test_adj, adj)
-        np.testing.assert_array_almost_equal(test_weighted_adj, weighted_adj)
+        np.testing.assert_allclose(test_big_M, big_M_adjs[1])
+        np.testing.assert_allclose(test_big_M_adj, big_M_adjs[0])
+        np.testing.assert_allclose(test_adj, adj)
+        np.testing.assert_allclose(test_weighted_adj, weighted_adj)
 
     def test_generate_between_parts_adj(self, between_parts_adj):
         target_adj = np.array(
@@ -608,7 +608,7 @@ class TestHelperFunctions:
             [1., 1., 1.1, 1.1, 1., 1., 1., 1., 1.2, 1.2, 0., 0.],
             [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
         ])
-        np.testing.assert_array_almost_equal(endweighting, target)
+        np.testing.assert_allclose(endweighting, target)
 
     def test_generate_endweighting(self):
         endweighting = helper.generate_endweighting(
@@ -622,7 +622,7 @@ class TestHelperFunctions:
             [2.5, 3.75, 5., 6.25, 0., 2.5],
             [1., 1.5, 2., 2.5, 0., 0.],
             [0., 0., 0., 0., 0., 0.]])
-        np.testing.assert_array_almost_equal(endweighting, target_endweighting)
+        np.testing.assert_allclose(endweighting, target_endweighting)
 
     def test_generate_within_parts_adj(self, within_part_adj):
         target = [
@@ -721,7 +721,7 @@ class TestHelperFunctions:
                 [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.]
             ]
         )
-        np.testing.assert_array_almost_equal(target, weighted_adj)
+        np.testing.assert_allclose(target, weighted_adj)
 
 
 def test_cut_2_by_2_diagonal():
