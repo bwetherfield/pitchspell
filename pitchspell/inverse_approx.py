@@ -5,7 +5,7 @@ from scipy.optimize import linprog
 from pitchspell.helper import generate_bounds, generate_cost_func, \
     generate_capacities_def, generate_flow_conditions, \
     get_weight_scalers, generate_duality_constraint, \
-    get_big_M_edges, generate_cut, \
+    get_big_M_edges, extract_cut, \
     generate_internal_cut_constraints, \
     generate_source_cut_constraints, generate_sink_cut_constraints, \
     extract_adjacencies, n_pitch_classes, n_pitch_class_internal_nodes, \
@@ -131,8 +131,8 @@ class ApproximateInverter(BaseEstimator):
 
         Parameters
         ----------
-        X: numpy.ndarray
-        y: numpy.ndarray (1D)
+        X: 2D array
+        y: 1D array
 
         """
         n_internal_nodes = X.shape[0]
@@ -262,11 +262,11 @@ class ApproximateInverter(BaseEstimator):
 
         Parameters
         ----------
-        X: numpy.ndarray
+        X: 2D array
 
         Returns
         -------
-        numpy.ndarray
+        1D array
 
         Variable order: x_i (N), y_ij ((N+2)^2) with final two columns of
         implicit square of variables s, and t
@@ -319,11 +319,11 @@ class ApproximateInverter(BaseEstimator):
         Parameters
         ----------
         n_internal_nodes: int
-        X: numpy.ndarray
+        X: array
 
         Returns
         -------
-        numpy.ndarray, numpy.ndarray
+        array, array
 
         """
         events = X[:, 0]
@@ -412,7 +412,7 @@ class ApproximateInverter(BaseEstimator):
 
         Returns
         -------
-        numpy.ndarray
+        array
 
         """
         X = X[:, 3]
@@ -432,12 +432,12 @@ class ApproximateInverter(BaseEstimator):
 
         Returns
         -------
-        numpy.ndarray, numpy.ndarray
+        array, array
 
         """
 
         return get_big_M_edges(half_internal_nodes)
 
     def generate_cut(self, adj, y):
-        cut = generate_cut(adj, y)
+        cut = extract_cut(adj, y)
         return cut

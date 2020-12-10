@@ -12,6 +12,24 @@ n_pitch_class_edges = 676  # pow(pitch_class_nodes, 2)
 
 def generate_bounds(pre_calculated_weights, internal_scheme, source_edge_scheme,
                     sink_edge_scheme, n_variables):
+    """
+    Generate the upper and lower bounds allowable for each variable.
+    Pitch-based edge weights are clamped according to an adjacency scheme if
+    edge weight schemes are not precalculated.
+
+    Parameters
+    ----------
+    pre_calculated_weights: bool
+    internal_scheme: array
+    source_edge_scheme: array
+    sink_edge_scheme: array
+    n_variables: int
+
+    Returns
+    -------
+    list[(float, Union[float, None])]
+
+    """
     if pre_calculated_weights:
         bounds = (0, None)
     else:
@@ -26,6 +44,22 @@ def generate_bounds(pre_calculated_weights, internal_scheme, source_edge_scheme,
 
 def generate_weight_upper_bounds(internal_scheme, sink_edge_scheme,
                                  source_edge_scheme):
+    """
+    Generate the upper bounds allowable for each variable. Pitch-based edge
+    weights are clamped according to an adjacency scheme if
+    edge weight schemes are not precalculated.
+
+    Parameters
+    ----------
+    internal_scheme: array
+    sink_edge_scheme: array
+    source_edge_scheme: array
+
+    Returns
+    -------
+    array
+
+    """
     pc_scheme = internal_scheme
     pc_scheme_idx = np.arange(n_pitch_classes) * 2
     pc_source_edges = np.zeros(n_pitch_class_internal_nodes, dtype=int)
@@ -39,6 +73,24 @@ def generate_weight_upper_bounds(internal_scheme, sink_edge_scheme,
 
 
 def generate_cost_func(accuracy, pre_calculated_weights, n_edges, n_variables):
+    """
+    Minimize duality gap while maximizing the sum of the edge scheme weights (
+    if computed). `accuracy` weights the extent to which duality gap is
+    prioritized over the sum over all edge scheme weights. Larger accuracy
+    results in smaller duality gap (closer to optimal flow / cut values).
+
+    Parameters
+    ----------
+    accuracy: float
+    pre_calculated_weights: bool
+    n_edges: int
+    n_variables: int
+
+    Returns
+    -------
+    (1D) array
+
+    """
     c = np.zeros((n_variables), dtype=int)
     c[2 * n_edges] = accuracy
     if not pre_calculated_weights:
@@ -49,6 +101,26 @@ def generate_cost_func(accuracy, pre_calculated_weights, n_edges, n_variables):
 def generate_capacities_def(pre_calculated_weights, big_M, n_edges,
                             n_internal_nodes, n_nodes, weighted_adj,
                             pitched_information):
+    """
+    Definitions for capacity variables for edges in terms of pitch class
+    relations. c(i,j) proportional to w(p(i), p(j)) where w is either fixed or
+    variable depending on the value of `pre_calculated_weights`.
+
+    Parameters
+    ----------
+    pre_calculated_weights: bool
+    big_M: array
+    n_edges: int
+    n_internal_nodes: int
+    n_nodes: int
+    weighted_adj: array
+    pitched_information: array
+
+    Returns
+    -------
+    array (2D), array (1D)
+
+    """
     if pre_calculated_weights:
         weight_scalers = pitched_information
         capacities_def, capacities_def_rhs = \
@@ -66,7 +138,29 @@ def generate_capacities_def(pre_calculated_weights, big_M, n_edges,
 def generate_capacities_def_weights_variable(big_M, n_edges, n_internal_nodes,
                                              n_nodes, pitch_classes,
                                              weighted_adj):
-    # c_i,j - a(i,j) * w_(p(i), p(j)) = 0
+    """
+    Generate constraints of the form
+
+        c_i,j - a(i,j) * w_(p(i), p(j)) = 0
+
+    where a(i,j) indicates adjacency between i and j in the graph and p(i)
+    denotes the pitch value associated with the node i. Generates constraint
+    coefficients and RHS separately.
+
+    Parameters
+    ----------
+    big_M: array
+    n_edges: int
+    n_internal_nodes: int
+    n_nodes: int
+    pitch_classes: array
+    weighted_adj: array
+
+    Returns
+    -------
+    array (2D), array (1d)
+
+    """
     capacities_def = np.eye(n_edges, dtype=float)
     pc_idx = pitch_classes * 2 + np.arange(n_internal_nodes) % 2
     source_pitch_class_index = n_pitch_class_internal_nodes
@@ -94,6 +188,27 @@ def generate_capacities_def_weights_variable(big_M, n_edges, n_internal_nodes,
 
 def generate_capacities_def_weights_fixed(big_M, n_edges, weighted_adj,
                                           weight_scalers):
+    """
+    Generate constraints of the form
+
+        c_i,j = a(i,j) * w_(p(i), p(j))
+
+    where a(i,j) indicates adjacency between i and j in the graph and p(i)
+    denotes the pitch value associated with the node i. Generates constraint
+    coefficients and RHS separately.
+
+    Parameters
+    ----------
+    big_M: array
+    n_edges: int
+    weighted_adj: array
+    weight_scalers: array
+
+    Returns
+    -------
+    tuple(array (2D), array (1D))
+
+    """
     # c_i,j = a(i,j) * w_(p(i), p(j))
     capacities_def = np.eye(n_edges, dtype=float)
     # RHS
@@ -102,6 +217,24 @@ def generate_capacities_def_weights_fixed(big_M, n_edges, weighted_adj,
 
 
 def generate_flow_conditions(adj, n_internal_nodes, n_nodes):
+    """
+    Generate conditions of the form
+
+        sum_(i=1)^n f_(i,k) - sum_(j=1)^n f_(k,j) = 0 for all k != s,t
+
+    specifying that the flow into each internal node equals the flow out of it.
+
+    Parameters
+    ----------
+    adj: array
+    n_internal_nodes: int
+    n_nodes: int
+
+    Returns
+    -------
+    array (2D), array (1D)
+
+    """
     internal_nodes = np.arange(n_internal_nodes)
 
     row_mask = np.zeros((n_internal_nodes, n_nodes, n_nodes), dtype=int)
@@ -119,6 +252,23 @@ def generate_flow_conditions(adj, n_internal_nodes, n_nodes):
 
 def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
                        half_internal_nodes, n_internal_nodes, pitch_classes):
+    """
+    Get weight scalers based on the pitches of the notes in the score.
+
+    Parameters
+    ----------
+    source_edge_scheme: array
+    sink_edge_scheme: array
+    internal_scheme: array
+    half_internal_nodes: int
+    n_internal_nodes: int
+    pitch_classes: array
+
+    Returns
+    -------
+    array
+
+    """
     idx = np.indices((half_internal_nodes,), dtype=int) * 2
     source_edges = source_edge_scheme[pitch_classes]
     source_edges[idx + 1] = 0
@@ -139,12 +289,42 @@ def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
 
 
 def cut_2_by_2_diagonal(n):
+    """
+    Set 2 by 2 block diagonal to 0 in matrix otherwise all 1's.
+
+    Parameters
+    ----------
+    n: int
+
+    Returns
+    -------
+    array
+
+    """
     return np.logical_not(
         f_inverse(lambda x: x // 2, (n, n), np.eye(n // 2, dtype=int))
     ).astype(int)
 
 
 def generate_duality_constraint(cut, n_internal_nodes):
+    """
+    Generate constraint of the form
+
+        sum_(i=1)^n f_s,i - sum_(e in cut) c_e = delta
+
+    which defines the "duality gap" between flow and cut values. Generates
+    constraint coefficients and RHS separately.
+
+    Parameters
+    ----------
+    cut: array
+    n_internal_nodes: int
+
+    Returns
+    -------
+    array (2D), array (1D)
+
+    """
     duality_constraint = np.concatenate([
         -np.ones(n_internal_nodes, dtype=int), cut.flatten(), [-1]
     ])
@@ -154,6 +334,20 @@ def generate_duality_constraint(cut, n_internal_nodes):
 
 
 def get_big_M_edges(half_internal_nodes):
+    """
+    Output the "big M" component graph which connects the up node and the
+    down node corresponding to a single note in the musical score by a
+    directed infinite weight edge.
+
+    Parameters
+    ----------
+    half_internal_nodes
+
+    Returns
+    -------
+    array
+
+    """
     adj_within = np.tile(
         [[0, 0], [1, 0]],
         [half_internal_nodes, half_internal_nodes]
@@ -171,19 +365,67 @@ def get_big_M_edges(half_internal_nodes):
     return adj_within, big_M
 
 
-def generate_cut(adj, y):
+def extract_cut(adj, y):
+    """
+    Extract cut from node values and adjacency structure of a network.
+
+    Parameters
+    ----------
+    adj: array (2D)
+    y: array (1D)
+
+    Returns
+    -------
+    array
+
+    """
     y_plus_source_sink = np.concatenate([y, [0, 1]])
     cut = generate_complete_cut(y_plus_source_sink) * adj
     return cut
 
 
 def generate_internal_cut_constraints(adj, n_internal_nodes):
+    """
+    Generate cut constraints of the form
+
+        x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
+
+    Parameters
+    ----------
+    adj: array
+    n_internal_nodes: int
+
+    Returns
+    -------
+    array
+
+    """
     sel = (slice(None, -2), slice(None, -2))
     return generate_cut_constraints(adj, n_internal_nodes, sel, True, True)
 
 
 def generate_cut_constraints(adj, n_internal_nodes, sel, internal_sources,
                              internal_dests):
+    """
+    Generate a general cut constraint of e.g. one of the following forms
+
+        x_j - x_i - y_(i,j) <= 0 for all i, j != s, t, where (i,j) is an edge
+        x_i - y_(s, i) <=0 for all i: (s,i) is an edge
+        - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
+
+    Parameters
+    ----------
+    adj: array
+    n_internal_nodes: int
+    sel: tuple[slice, slice]
+    internal_sources: bool
+    internal_dests: bool
+
+    Returns
+    -------
+    array
+
+    """
     bools = np.zeros_like(adj).astype(bool)
     bools[sel] = True
     bools *= (adj != 0)
@@ -204,12 +446,46 @@ def generate_cut_constraints(adj, n_internal_nodes, sel, internal_sources,
 
 
 def generate_source_cut_constraints(adj, n_internal_nodes):
+    """
+    Generate cut constraints of the form
+
+        x_i - y_(s, i) <=0 for all i: (s,i) is an edge
+
+    for edges from the source node.
+
+    Parameters
+    ----------
+    adj: array
+    n_internal_nodes: int
+
+    Returns
+    -------
+    array
+
+    """
     sel = (slice(-2, None), slice(None))
     return generate_cut_constraints(adj, n_internal_nodes, sel,
                                     internal_sources=False, internal_dests=True)
 
 
 def generate_sink_cut_constraints(adj, n_internal_nodes):
+    """
+    Generate cut constraints of the form
+
+        - x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
+
+    for edges that go towards the sink edge.
+
+    Parameters
+    ----------
+    adj: array
+    n_internal_nodes: int
+
+    Returns
+    -------
+    array
+
+    """
     sel = (slice(None), slice(-1, None))
     return generate_cut_constraints(adj, n_internal_nodes, sel,
                                     internal_sources=True, internal_dests=False)
@@ -219,6 +495,28 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
                         between_part_scalar, chains, ends, events, timefactor,
                         half_internal_nodes, n_internal_nodes, parts,
                         starts):
+    """
+    Generate unweighted and weighted adjacency structures from score data.
+
+    Parameters
+    ----------
+    distance_cutoff: int
+    distance_rolloff: float in (0,1]
+    between_part_scalar: float
+    chains: (1D) array of length `n_internal_nodes`
+    ends: (1D) array of length `n_internal_nodes`
+    events: (1D) array of length `n_internal_nodes`
+    timefactor: (1D) array of length `n_internal_nodes`
+    half_internal_nodes: int
+    n_internal_nodes: int
+    parts: (1D) array of length `n_internal_nodes`
+    starts: (1D) array of length `n_internal_nodes`
+
+    Returns
+    -------
+    array, array
+
+    """
     within_chain_adjs = generate_within_part_adj(chains, distance_cutoff,
                                                  half_internal_nodes,
                                                  events,
@@ -242,6 +540,23 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
 def generate_weighted_adj(between_parts_adj, between_part_scalar,
                           distance_rolloff, adj, endweighting,
                           within_chain_adjs):
+    """
+    Generate weighted adjacency incorporating scalefactors applied to
+    different subcomponents of adjacency structure
+
+    Parameters
+    ----------
+    between_parts_adj: array
+    between_part_scalar: float
+    distance_rolloff: float in (0,1]
+    adj: array
+    endweighting: array
+    within_chain_adjs: array
+
+    Returns
+    -------
+    array
+    """
     weighted_adj = adj.astype(float)
     weighted_adj[:-2, :-2] = sum([
         pow(distance_rolloff, i) * chain for i, chain in
@@ -253,6 +568,22 @@ def generate_weighted_adj(between_parts_adj, between_part_scalar,
 
 def generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
                  within_chain_adjs):
+    """
+    Generate adjacency structures between chains (for simultaneous events) and
+    within chains (each precomputed).
+
+    Parameters
+    ----------
+    between_part_adj: array
+    half_internal_nodes: int
+    n_internal_nodes: int
+    within_chain_adjs: array
+
+    Returns
+    -------
+    array
+
+    """
     source_adj = np.zeros((n_internal_nodes,), dtype=int)
     sink_adj = np.zeros((n_internal_nodes,), dtype=int)
     idx = np.indices((half_internal_nodes,), dtype=int) * 2
@@ -266,6 +597,21 @@ def generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
 
 
 def generate_between_parts_adj(ends, parts, starts):
+    """
+    Generate adjacency structure that connects notes in separate parts that
+    are simultaneous.
+
+    Parameters
+    ----------
+    ends: array
+    parts: array
+    starts: array
+
+    Returns
+    -------
+    array
+
+    """
     part_adj = pullback(parts)
     not_part_adj = np.logical_not(part_adj).astype(int)
     between_parts_adj = concurrencies(
@@ -277,19 +623,22 @@ def generate_between_parts_adj(ends, parts, starts):
 def generate_within_part_adj(chains, distance_cutoff, half_internal_nodes,
                              events, n_internal_nodes, parts):
     """
+    Generate connections between notes within the same chain (sub-sections of
+    parts between pre-defined "chainbreakers" like long rests or double
+    barlines).
 
     Parameters
     ----------
-    chains
-    distance_cutoff
-    half_internal_nodes
-    n_events
-    n_internal_nodes
-    parts
+    chains: array
+    distance_cutoff: int
+    half_internal_nodes: int
+    n_events: int
+    n_internal_nodes: int
+    parts: array
 
     Returns
     -------
-    list of arrays
+    list[array]
 
     """
     n_events = events.max() + 1
@@ -309,6 +658,19 @@ def generate_within_part_adj(chains, distance_cutoff, half_internal_nodes,
 
 
 def generate_endweighting(timefactor):
+    """
+    Multiply together the timefactor associated to each node for each pair of
+    nodes (each edge in a complete graph).
+
+    Parameters
+    ----------
+    timefactor: (1D) array
+
+    Returns
+    -------
+    array (2D)
+
+    """
     endweighting = np.hstack(timefactor) * np.vstack(timefactor)
     endweighting = add_node(endweighting, out_edges=timefactor)
     endweighting = add_node(endweighting, in_edges=np.append(timefactor, 0))

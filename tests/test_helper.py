@@ -297,19 +297,16 @@ class TestHelperFunctions:
         np.testing.assert_array_equal(duality_rhs, [0])
 
     def test_generate_cut(self):
-        cut = helper.generate_cut(
-            adj=np.array(
-                [
-                    [0, 0, 0, 1, 0, 0],
-                    [0, 0, 0, 0, 0, 1],
-                    [0, 1, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 1],
-                    [1, 0, 1, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0]
-                ]
-            ),
-            y=[0, 0, 0, 1]
-        )
+        cut = helper.extract_cut(adj=np.array(
+            [
+                [0, 0, 0, 1, 0, 0],
+                [0, 0, 0, 0, 0, 1],
+                [0, 1, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 1],
+                [1, 0, 1, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0]
+            ]
+        ), y=[0, 0, 0, 1])
         target_cut = np.array(
             [
                 [0, 0, 0, 1, 0, 0],
