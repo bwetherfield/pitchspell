@@ -554,10 +554,10 @@ class TestHelperFunctions:
         )
         assert rhs[12] == np.inf
 
-    @pytest.mark.xfail(reason="not yet fixed")
     def test_extract_adjacencies(self, chains, ends, events, starts, parts,
-                                 timefactor):
-        big_M_adj, big_M, adj, weighted_adj = helper.extract_adjacencies(
+                                 timefactor, weighted_adj, adj, big_M_adjs):
+        test_big_M_adj, test_big_M, test_adj, test_weighted_adj = \
+            helper.extract_adjacencies(
             distance_cutoff=1,
             distance_rolloff=0.9,
             between_part_scalar=0.5,
@@ -570,8 +570,10 @@ class TestHelperFunctions:
             parts=parts,
             starts=starts
         )
-        print(weighted_adj)
-        assert False
+        np.testing.assert_array_almost_equal(test_big_M, big_M_adjs[1])
+        np.testing.assert_array_almost_equal(test_big_M_adj, big_M_adjs[0])
+        np.testing.assert_array_almost_equal(test_adj, adj)
+        np.testing.assert_array_almost_equal(test_weighted_adj, weighted_adj)
 
     def test_generate_between_parts_adj(self, between_parts_adj):
         target_adj = np.array(
