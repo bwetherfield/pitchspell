@@ -183,8 +183,22 @@ class ApproximateInverter(BaseEstimator):
 
     def prepare_fit_input(self, X, half_internal_nodes, n_edges,
                           n_internal_nodes, n_nodes, n_variables, y):
-        adj, weighted_adj = self.extract_adjacencies(half_internal_nodes,
-                                                     n_internal_nodes, X)
+        events = X[:, 0]
+        chains = X[:, 1]
+        parts = X[:, 2]
+        starts = X[:, 4]
+        ends = X[:, 4] + X[:, 5]
+        time_factor = X[:, 6]
+        adj2, adj1 = extract_adjacencies(self.distance_cutoff,
+                                         self.distance_rolloff,
+                                         self.between_part_scalar,
+                                         chains, ends, events,
+                                         time_factor,
+                                         half_internal_nodes,
+                                         n_internal_nodes,
+                                         parts, starts)
+        result1 = adj2, adj1
+        adj, weighted_adj = result1
         internal_adj = np.zeros((n_nodes, n_nodes))
         internal_adj[-2:, -2:] = adj[-2:, -2:]
         # ----------------------------------------
@@ -312,8 +326,22 @@ class ApproximateInverter(BaseEstimator):
         n_nodes = n_internal_nodes + 2
         n_edges = pow(n_nodes, 2)
         half_internal_nodes = n_internal_nodes // 2
-        adj, weighted_adj = self.extract_adjacencies(half_internal_nodes,
-                                                     n_internal_nodes, X)
+        events = X[:, 0]
+        chains = X[:, 1]
+        parts = X[:, 2]
+        starts = X[:, 4]
+        ends = X[:, 4] + X[:, 5]
+        time_factor = X[:, 6]
+        adj2, adj1 = extract_adjacencies(self.distance_cutoff,
+                                         self.distance_rolloff,
+                                         self.between_part_scalar,
+                                         chains, ends, events,
+                                         time_factor,
+                                         half_internal_nodes,
+                                         n_internal_nodes,
+                                         parts, starts)
+        result = adj2, adj1
+        adj, weighted_adj = result
         pitch_classes = X[:, 3]
         weight_scalers = get_weight_scalers(self.source_edge_scheme,
                                             self.sink_edge_scheme,
@@ -346,34 +374,3 @@ class ApproximateInverter(BaseEstimator):
             sink_constraints_rhs
         ])
         return A_ub, b_ub, bounds, c
-
-    def extract_adjacencies(self, half_internal_nodes, n_internal_nodes, X):
-        """
-        Generate unweighted and weighted adjacency structures from node data X.
-
-        Parameters
-        ----------
-        n_internal_nodes: int
-        X: ndarray
-            2D array
-
-        Returns
-        -------
-        tuple[numpy.ndarray, numpy.ndarray]
-
-        """
-        events = X[:, 0]
-        chains = X[:, 1]
-        parts = X[:, 2]
-        starts = X[:, 4]
-        ends = X[:, 4] + X[:, 5]
-        time_factor = X[:, 6]
-        adj, weighted_adj = extract_adjacencies(self.distance_cutoff,
-                                                self.distance_rolloff,
-                                                self.between_part_scalar,
-                                                chains, ends, events,
-                                                time_factor,
-                                                half_internal_nodes,
-                                                n_internal_nodes,
-                                                parts, starts)
-        return adj, weighted_adj
