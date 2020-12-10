@@ -132,8 +132,10 @@ class ApproximateInverter(BaseEstimator):
 
         Parameters
         ----------
-        X: 2D array
-        y: 1D array
+        X: ndarray
+            2D array
+        y: ndarray
+            1D array
 
         """
         n_internal_nodes = X.shape[0]
@@ -197,59 +199,6 @@ class ApproximateInverter(BaseEstimator):
             axis=1
         )
 
-        # ----------------------------------------
-        # SPACED EQUALITY CONSTRAINTS
-        # add space for delta variable and pitch class weight matrix
-        flow_conditions_spaced = pad(
-            (flow_conditions.shape[0], n_variables),
-            flow_conditions,
-            np.indices(flow_conditions.shape)
-        )
-
-        duality_constraint_spaced = pad(
-            (duality_constraint.shape[0], n_variables),
-            duality_constraint,
-            np.indices(duality_constraint.shape)
-        )
-
-        capacities_def_spaced = self.space_capacities_def(
-            capacities_def,
-            n_edges,
-            n_variables
-        )
-
-        # ----------------------------------------
-        # SPACED INEQUALITY CONSTRAINTS
-        # add space for delta variable and pitch class weight matrix
-        capacity_conditions_spaced = pad(
-            (capacity_conditions.shape[0], n_variables),
-            capacity_conditions,
-            np.indices(capacity_conditions.shape)
-        )
-        capacity_conditions_rhs = np.zeros((n_edges), dtype=int)
-
-        # ----------------------------------------
-        # SET UP LINEAR PROGRAM
-        c = generate_cost_func(self.accuracy,
-                               self.pre_calculated_weights, n_edges,
-                               n_variables)
-        A_eq = np.concatenate([
-            flow_conditions_spaced,
-            duality_constraint_spaced,
-            capacities_def_spaced
-        ], axis=0)
-        b_eq = np.concatenate([
-            flow_conditions_rhs,
-            duality_constraint_rhs,
-            capacities_def_rhs
-        ])
-        A_ub = capacity_conditions_spaced
-        b_ub = capacity_conditions_rhs
-        bounds = generate_bounds(self.pre_calculated_weights,
-                                 self.internal_scheme,
-                                 self.source_edge_scheme, self.sink_edge_scheme,
-                                 n_variables)
-
         output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
                           bounds=bounds)
         # Accuracy score given by size of duality gap of linear program
@@ -284,14 +233,15 @@ class ApproximateInverter(BaseEstimator):
 
         Parameters
         ----------
-        X: 2D array
+        X: ndarray
+            2D array
 
         Returns
         -------
-        1D array
-
-        Variable order: x_i (N), y_ij ((N+2)^2) with final two columns of
-        implicit square of variables s, and t
+        numpy.ndarray
+            1D array \\
+            Variable order: x_i (N), y_ij ((N+2)^2) with final two columns of
+            implicit square of variables s, and t
         """
         n_internal_nodes = X.shape[0]
         n_nodes = n_internal_nodes + 2
@@ -344,11 +294,12 @@ class ApproximateInverter(BaseEstimator):
         Parameters
         ----------
         n_internal_nodes: int
-        X: array
+        X: ndarray
+            2D array
 
         Returns
         -------
-        array, array
+        tuple[numpy.ndarray, numpy.ndarray]
 
         """
         events = X[:, 0]

@@ -27,13 +27,13 @@ def generate_bounds(pre_calculated_weights, internal_scheme, source_edge_scheme,
 
     Returns
     -------
-    list[(float, Union[float, None])]
+    list[tuple[float, (float, optional)]]
 
     """
     if pre_calculated_weights:
         bounds = (0, None)
     else:
-        ub = np.full((n_variables), None)
+        ub = np.full(n_variables, None)
         weight_upper_bounds = generate_weight_upper_bounds(internal_scheme,
                                                            sink_edge_scheme,
                                                            source_edge_scheme)
@@ -57,7 +57,7 @@ def generate_weight_upper_bounds(internal_scheme, sink_edge_scheme,
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     pc_scheme = internal_scheme
@@ -88,10 +88,11 @@ def generate_cost_func(accuracy, pre_calculated_weights, n_edges, n_variables):
 
     Returns
     -------
-    ndarray (1D)
+    ndarray
+        1D array
 
     """
-    c = np.zeros((n_variables), dtype=int)
+    c = np.zeros(n_variables, dtype=int)
     c[2 * n_edges] = accuracy
     if not pre_calculated_weights:
         c[-n_pitch_class_edges:] = -1
@@ -118,7 +119,8 @@ def generate_capacities_def(pre_calculated_weights, big_M, n_edges,
 
     Returns
     -------
-    ndarray (2D), ndarray (1D)
+    tuple[numpy.ndarray, numpy.ndarray]
+        2D array, 1D array
 
     """
     if pre_calculated_weights:
@@ -158,7 +160,8 @@ def generate_capacities_def_weights_variable(big_M, n_edges, n_internal_nodes,
 
     Returns
     -------
-    ndarray (2D), ndarray (1d)
+    tuple[numpy.ndarray, numpy.ndarray]
+        2D array, 1D array
 
     """
     capacities_def = np.eye(n_edges, dtype=float)
@@ -206,7 +209,8 @@ def generate_capacities_def_weights_fixed(big_M, n_edges, weighted_adj,
 
     Returns
     -------
-    tuple(ndarray (2D), ndarray (1D))
+    tuple[numpy.ndarray, numpy.ndarray]
+        2D array, 1D array
 
     """
     # c_i,j = a(i,j) * w_(p(i), p(j))
@@ -232,7 +236,8 @@ def generate_flow_conditions(adj, n_internal_nodes, n_nodes):
 
     Returns
     -------
-    ndarray (2D), ndarray (1D)
+    numpy.ndarray, numpy.ndarray
+        2D array, 1D array
 
     """
     internal_nodes = np.arange(n_internal_nodes)
@@ -246,7 +251,7 @@ def generate_flow_conditions(adj, n_internal_nodes, n_nodes):
     flow_conditions = (row_mask[:] - col_mask[:]) * adj
     flow_conditions = flow_conditions.reshape(n_internal_nodes, -1)
     # RHS
-    flow_conditions_rhs = np.zeros((n_internal_nodes), dtype=int)
+    flow_conditions_rhs = np.zeros(n_internal_nodes, dtype=int)
     return flow_conditions, flow_conditions_rhs
 
 
@@ -266,7 +271,7 @@ def get_weight_scalers(source_edge_scheme, sink_edge_scheme, internal_scheme,
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     idx = np.indices((half_internal_nodes,), dtype=int) * 2
@@ -298,7 +303,7 @@ def cut_2_by_2_diagonal(n):
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     return np.logical_not(
@@ -322,7 +327,8 @@ def generate_duality_constraint(cut, n_internal_nodes):
 
     Returns
     -------
-    ndarray (2D), ndarray (1D)
+    tuple[numpy.ndarray, numpy.ndarray]
+        2D array, 1D array
 
     """
     duality_constraint = np.concatenate([
@@ -345,7 +351,7 @@ def get_big_M_edges(half_internal_nodes):
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     adj_within = np.tile(
@@ -371,12 +377,14 @@ def extract_cut(adj, y):
 
     Parameters
     ----------
-    adj: ndarray (2D)
-    y: ndarray (1D)
+    adj: ndarray
+        2D array
+    y: ndarray
+        1D array
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     y_plus_source_sink = np.concatenate([y, [0, 1]])
@@ -397,7 +405,7 @@ def generate_internal_cut_constraints(adj, n_internal_nodes):
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     sel = (slice(None, -2), slice(None, -2))
@@ -413,7 +421,7 @@ def generate_cut_constraints(adj, n_internal_nodes, sel, internal_sources,
 
         x_i - y_(s, i) <=0 for all i: (s,i) is an edge
 
-        \- x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
+        `-` x_i - y_(i, t) <= -1 for all i: (i,t) is an edge
 
     Parameters
     ----------
@@ -425,7 +433,7 @@ def generate_cut_constraints(adj, n_internal_nodes, sel, internal_sources,
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     bools = np.zeros_like(adj).astype(bool)
@@ -462,7 +470,7 @@ def generate_source_cut_constraints(adj, n_internal_nodes):
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     sel = (slice(-2, None), slice(None))
@@ -485,7 +493,7 @@ def generate_sink_cut_constraints(adj, n_internal_nodes):
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     sel = (slice(None), slice(-1, None))
@@ -503,20 +511,31 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     Parameters
     ----------
     distance_cutoff: int
-    distance_rolloff: float in (0,1]
+        maximum distance in score between adjacent nodes
+    distance_rolloff: float
+        float in range (0,1]
     between_part_scalar: float
-    chains: ndarray (1D) of length `n_internal_nodes`
-    ends: ndarray (1D) of length `n_internal_nodes`
-    events: ndarray (1D) of length `n_internal_nodes`
+        scalar for adjacencies between nodes in different parts
+    chains: ndarray
+        1D array of length `n_internal_nodes`
+    ends: ndarray
+        1D array of length `n_internal_nodes`
+    events: ndarray
+        1D array of length `n_internal_nodes`
     time_factor: ndarray (1D) of length `n_internal_nodes`
+        1D array of length `n_internal_nodes`
     half_internal_nodes: int
+        half the number of internal nodes
     n_internal_nodes: int
-    parts: ndarray (1D) of length `n_internal_nodes`
-    starts: ndarray (1D) of length `n_internal_nodes`
+        number of nodes excluding source and sink nodes
+    parts: ndarray
+        1D array of length `n_internal_nodes`
+    starts: ndarray
+        1D array of length `n_internal_nodes`
 
     Returns
     -------
-    ndarray, ndarray
+    tuple[numpy.ndarray, numpy.ndarray]
 
     """
     within_chain_adjs = generate_within_part_adj(chains, distance_cutoff,
@@ -550,14 +569,15 @@ def generate_weighted_adj(between_parts_adj, between_part_scalar,
     ----------
     between_parts_adj: ndarray
     between_part_scalar: float
-    distance_rolloff: float in (0,1]
+    distance_rolloff: float
+        float in (0,1]
     adj: ndarray
     endweighting: ndarray
-    within_chain_adjs: ndarray
+    within_chain_adjs: list[ndarray]
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
     """
     weighted_adj = adj.astype(float)
     weighted_adj[:-2, :-2] = sum([
@@ -579,11 +599,11 @@ def generate_adj(between_part_adj, half_internal_nodes, n_internal_nodes,
     between_part_adj: ndarray
     half_internal_nodes: int
     n_internal_nodes: int
-    within_chain_adjs: ndarray
+    within_chain_adjs: list[ndarray]
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     source_adj = np.zeros((n_internal_nodes,), dtype=int)
@@ -611,7 +631,7 @@ def generate_between_parts_adj(ends, parts, starts):
 
     Returns
     -------
-    ndarray
+    numpy.ndarray
 
     """
     part_adj = pullback(parts)
@@ -634,13 +654,13 @@ def generate_within_part_adj(chains, distance_cutoff, half_internal_nodes,
     chains: ndarray
     distance_cutoff: int
     half_internal_nodes: int
-    n_events: int
+    events: ndarray
     n_internal_nodes: int
     parts: ndarray
 
     Returns
     -------
-    list[ndarray]
+    list[numpy.ndarray]
 
     """
     n_events = events.max() + 1
@@ -666,11 +686,13 @@ def generate_endweighting(time_factor):
 
     Parameters
     ----------
-    time_factor: ndarray (1D)
+    time_factor: ndarray
+        1D array
 
     Returns
     -------
-    ndarray (2D)
+    numpy.ndarray
+        2D array
 
     """
     endweighting = np.hstack(time_factor) * np.vstack(time_factor)
