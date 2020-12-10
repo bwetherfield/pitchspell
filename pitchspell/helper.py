@@ -537,6 +537,7 @@ def extract_adjacencies(distance_cutoff, distance_rolloff,
     Returns
     -------
     tuple[numpy.ndarray, numpy.ndarray]
+        adjacency matrix, weight matrix
 
     """
     within_chain_adjs = generate_within_part_adj(chains, distance_cutoff,

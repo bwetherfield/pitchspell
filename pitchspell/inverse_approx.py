@@ -156,14 +156,14 @@ class ApproximateInverter(BaseEstimator):
             y
         )
 
-        output_ = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
+        _output = linprog(c=c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq,
                           bounds=bounds)
         # Accuracy score given by size of duality gap of linear program
-        self._score = output_.x[2 * n_edges]
+        self._score = _output.x[2 * n_edges]
 
         # Record edge weight schemes
         if not self.pre_calculated_weights:
-            weights_unfiltered = output_.x[-n_pitch_class_edges:]
+            weights_unfiltered = _output.x[-n_pitch_class_edges:]
             self.source_edge_scheme = weights_unfiltered[
                 (np.indices((n_pitch_classes,),
                             dtype=int) * 2) * n_pitch_class_nodes +
@@ -189,7 +189,7 @@ class ApproximateInverter(BaseEstimator):
         starts = X[:, 4]
         ends = X[:, 4] + X[:, 5]
         time_factor = X[:, 6]
-        adj2, adj1 = extract_adjacencies(self.distance_cutoff,
+        adj, weighted_adj = extract_adjacencies(self.distance_cutoff,
                                          self.distance_rolloff,
                                          self.between_part_scalar,
                                          chains, ends, events,
@@ -197,8 +197,6 @@ class ApproximateInverter(BaseEstimator):
                                          half_internal_nodes,
                                          n_internal_nodes,
                                          parts, starts)
-        result1 = adj2, adj1
-        adj, weighted_adj = result1
         internal_adj = np.zeros((n_nodes, n_nodes))
         internal_adj[-2:, -2:] = adj[-2:, -2:]
         # ----------------------------------------
@@ -332,7 +330,7 @@ class ApproximateInverter(BaseEstimator):
         starts = X[:, 4]
         ends = X[:, 4] + X[:, 5]
         time_factor = X[:, 6]
-        adj2, adj1 = extract_adjacencies(self.distance_cutoff,
+        adj, weighted_adj = extract_adjacencies(self.distance_cutoff,
                                          self.distance_rolloff,
                                          self.between_part_scalar,
                                          chains, ends, events,
@@ -340,8 +338,6 @@ class ApproximateInverter(BaseEstimator):
                                          half_internal_nodes,
                                          n_internal_nodes,
                                          parts, starts)
-        result = adj2, adj1
-        adj, weighted_adj = result
         pitch_classes = X[:, 3]
         weight_scalers = get_weight_scalers(self.source_edge_scheme,
                                             self.sink_edge_scheme,
