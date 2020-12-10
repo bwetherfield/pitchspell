@@ -3,6 +3,7 @@ import numpy as np
 from pitchspell.minimum_cut import generate_complete_cut
 from pitchspell.prepare_edges import add_node, hop_adjacencies, concurrencies
 from pitchspell.pullback import pullback, f_inverse
+from pullback import pad
 
 n_pitch_classes = 12
 n_pitch_class_internal_nodes = 24  # n_pitch_classes * 2
@@ -699,3 +700,63 @@ def generate_endweighting(time_factor):
     endweighting = add_node(endweighting, out_edges=time_factor)
     endweighting = add_node(endweighting, in_edges=np.append(time_factor, 0))
     return endweighting
+
+
+def space_capacities_def(pre_calculated_weights, capacities_def, n_edges,
+                         n_variables):
+    """
+    Spaces the columns of `capacities_def` to align with the list of variables
+    where the order is given by
+
+        c_(i,j) - (N+2)^2 capacities
+
+        f_(i,j) - (N+2)^2 flows
+
+        delta  - 1  duality gap variable
+
+        w_(p(i), p(j)) - 26^2 pitch based weights (if pre_calculated_weights =
+        False)
+
+    Parameters
+    ----------
+    pre_calculated_weights: bool
+    capacities_def: ndarray
+    n_edges: int
+    n_variables: int
+
+    Returns
+    -------
+    numpy.ndarray
+
+    """
+    if pre_calculated_weights:
+        abs_idx = np.indices(
+            (n_edges, n_edges))
+        abs_idx[1] += n_edges
+        capacities_def_spaced = pad(
+            (capacities_def.shape[0],
+             n_variables),
+            capacities_def,
+            abs_idx
+        )
+    else:
+        pitch_based_capacity_abs_idx = np.indices(
+            capacities_def.shape
+        )
+        pitch_based_capacity_abs_idx[1] += n_variables
+        capacity_idx = np.indices(
+            (n_edges, n_edges))
+        capacity_idx[1] += n_edges
+        capacity_definition_spaced_idx = np.concatenate([
+            capacity_idx,
+            pitch_based_capacity_abs_idx
+        ], axis=2)
+        capacities_def_spaced = pad(
+            (
+                capacities_def.shape[0],
+                n_variables
+            ),
+            capacities_def,
+            capacity_definition_spaced_idx
+        )
+    return capacities_def_spaced
